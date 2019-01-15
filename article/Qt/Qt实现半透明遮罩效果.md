@@ -1,19 +1,25 @@
-* #### 本文索引
-  * [需求](#requirement)
-  * [原理](#principle)
-  * [实现遮罩控件](#implement)
-  * [遮罩的使用](#using)
+<blockquote id="bookmark">
+  <h4>本文索引：</h4>
+  <ul>
+    <li><a href="#requirement">需求</a></li>
+    <li><a href="#principle">原理</a></li>
+    <li><a href="#implement">实现遮罩控件</a></li>
+    <li><a href="#using">遮罩的使用</a></li>
+  </ul>
+</blockquote>
 
-<h1 id="requirement">需求</h1>
+<h2 id="requirement">需求</h2>
 我们在显示一些模态对话框的时候，往往需要将对话框的背景颜色调暗以达到突出当前对话框的效果，例如：
+
 ![突出对话框](../../images/mask-widget/mask1.png)
+
 对话框的父窗口除了标题栏以外的部分都变暗了，在父窗口的对比下对话框的显示效果就得到了强调。
 
 这种设计多见于web页面，当用户点击诸如购买之类的按钮后页面会弹出一个购物清单确认对话框，并将对话框以外的内容用类似图中的效果处理，使用户可以将注意力集中在对话框本身。
 
 今天我们也将使用Qt来实现这一效果。
 
-<h1 id="principle">原理</h1>
+<h2 id="principle">原理</h2>
 在介绍具体做法前我想先介绍一点预备知识——“亮盒效果”。这是一个摄影技术的名词，大意是指将背景暗化以便突出照片的主体，因为往往使用一个黑色的“盒子”来罩住需要拍摄的主体，所以被称为亮盒。而这与我们想实现的效果不谋而合。
 
 所以想要实现让对话框的父窗口变暗的效果，最常见的手段就是使用一个半透明遮罩控件将父窗口组件整个遮住。
@@ -28,7 +34,7 @@
 
 下面就让我们看一下python3实现的遮罩控件。
 
-<h1 id="implement">实现遮罩控件</h1>
+<h2 id="implement">实现遮罩控件</h2>
 先看代码：
 ```python
 class MaskWidget(QWidget):
@@ -59,7 +65,7 @@ class MaskWidget(QWidget):
 
 第二个重点在重写的`show`方法上。光设置了颜色和透明度还不够，我们还要让控件正确地遮盖住parent。为了达到这一目的，我们先获取parent的geometry，然后使用`self.setGeometry(0, 0, parent_rect.width(), parent_rect.height())`将控件设置到与parent重合（原理参考上一节内容）。而如果我们没有给控件设置parent，那么控件什么也不会做，因为控件本身需要依赖于parent，如果没有的话也就没法正常显示了。之后再使用`QWidget.show()`就可以显示我们的遮罩效果了。
 
-<h1 id="using">遮罩的使用</h1>
+<h2 id="using">遮罩的使用</h2>
 使用遮罩也相当简单：
 ```python
 class MyWidget(QWidget):
@@ -103,6 +109,7 @@ if __name__ == '__main__':
 之所以要在对话框显示之前先显示遮罩，是因为显示模态对话框后父窗口的事件循环被阻塞，这时所有对父窗口的操作都是被阻塞的，而对话框关闭后遮罩就被close了，父窗口的事件循环会将多次绘制事件智能的合并，所以遮罩可能根本不会被显示出来，因此我们必须在对话框前显示遮罩。（如果你好奇的话可以把两行代码的顺序对调，看看是否能正常显示遮罩控件）
 
 这样我们的遮罩控件就完成了，运行程序：
+
 ![normal-dialog](../../images/mask-widget/mask2.png)
 
 ![MaskWidget](../../images/mask-widget/mask1.png)

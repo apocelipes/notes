@@ -1,4 +1,5 @@
 在现代Linux桌面环境上我们时常可以看到类似的消息框：
+
 ![](../../images/linux-notification/notify1.jpg)
 
 这些消息框常用在如下场景：
@@ -12,7 +13,7 @@
 
 所以我们先了解一下这个D-BUS服务。
 
-# org.freedesktop.Notifications概览
+## org.freedesktop.Notifications概览
 一个气泡框消息通常会包含如下的属性：
 
 | 名称 | 说明 |
@@ -62,6 +63,7 @@ sudo pacman -S libnotify
 notify-send test 'This is a desktop Notification test.' -t 10000
 ```
 `-t`参数设置超时时间。效果如下：
+
 ![](../../images/linux-notification/notify2.png)
 
 具体的参数可以参考这里：[https://ss64.com/bash/notify-send.html](https://ss64.com/bash/notify-send.html)
@@ -83,6 +85,7 @@ func main() {
 }
 ```
 上面的代码将会显示一个可以在桌面停留5s的气泡框：
+
 ![](../../images/linux-notification/notify3.png)
 
 不过如果每次都要使用一大串代码才能显示消息的话必然是低效的，而且需要换算时间至毫秒，所以我写了一个帮助函数在[notify.go](https://github.com/apocelipes/schannel-qt5/blob/master/widgets/notify.go):

@@ -3,7 +3,19 @@ Python中的内置类型是我们开发中最常见的，很多人都能熟练�
 然而有一些内置类型确实不那么常见的，或者说往往会被我们忽略，所以这次的主题就是带领大家重新认识这些“不同寻常”的内置类型。
 （注意：本文基于python3，不会包含任何python2相关内容）
 
-## frozenset
+<blockquote id="bookmark">
+  <h4>本文索引：</h4>
+  <ul>
+    <li><a href="#frozenset">frozenset</a></li>
+    <li><a href="#range">range</a></li>
+    <li><a href="#bytearray">bytearray</a></li>
+    <li><a href="#memoryview">memoryview</a></li>
+    <li><a href="#dict-views">dict-views</a></li>
+    <li><a href="#ellipsis">ellipsis object (...)</a></li>
+  </ul>
+</blockquote>
+
+<h2 id="frozenset">frozenset</h2>
 不可变集合（frozenset）与普通的set一样，只不过它的元素是不可变的，因此诸如`add`，`remove`，`update`等可以添加/删除/改变集合内元素的方法是不存在的，换句话说一旦frozenset建立后你将不再可能更改集合内的元素。其他的方法与set一致：
 ```python
 >>> frozen = frozenset([1, 1, 2, 3, 4, 5, 6, 6])
@@ -14,7 +26,7 @@ frozenset({1, 2, 3, 4, 5, 6, 7, 8})
 frozenset({4, 5, 6, 7, 8})
 ```
 
-## range
+<h2 id="range">range</h2>
 `range`事实上相当得常见，所以你也许会奇怪我为什么把它列出来。
 
 其实原因很简单，因为大部分人熟悉`range`的使用，但并不清楚range到底是什么。返回迭代器？返回一个可迭代对象？`range`本身又是什么呢？
@@ -31,7 +43,7 @@ frozenset({4, 5, 6, 7, 8})
 ```
 因此，`range`既不返回迭代器，也不返回其他可迭代对象，而是返回的自己。
 
-## bytearray
+<h2 id="bytearray">bytearray</h2>
 `bytearray`一般情况下并不常见，它主要为了可以实现原地修改bytes对象而出现，因为bytes和str一样是不可变对象，例如这样是非法的：
 ```python
 >>> b = '测试用例a'.encode('utf8')
@@ -61,7 +73,7 @@ TypeError: 'bytes' object does not support item assignment
 '测试用例b'
 ```
 
-## memoryview
+<h2 id="memoryview">memoryview</h2>
 `memoryview`提供了直接访问对象内存的机制，只要目标对象支持[buffer protocol](https://docs.python.org/3/c-api/buffer.html#bufferobjects)，例如`bytes`和`bytearray`。
 
 `memoryview`有个称为“元素”的概念，也就是对象规定的最小的内存单元，比如`bytes`和`bytearray`的最小内存单元就是一个byte，具体取决于对象的实现。
@@ -93,7 +105,7 @@ ValueError: memoryview assignment: lvalue and rvalue have different structures
 bytearray(b'z1spam')
 ```
 
-## dict-views
+<h2 id="dict-views">dict-views</h2>
 准确的说，这不是一种类型，而是一种概念。然而typing里仍然将其视为一种类型，所以也就罗列在此了。
 
 概念：`返回自dict.keys()`,`dict.values`()和`dict.items()`的对象被称作`dict-views`。
@@ -131,7 +143,7 @@ bytearray(b'z1spam')
 ```
 从例子中可以看出，views保持着元素的插入顺序（插入顺序的保证从python3.6开始）以及views动态反应了key/value的插入和删除以及修改，因此在某些场景下views对象是相当有用的。
 
-## The Ellipsis Object (...)
+<h2 id="ellipsis">The Ellipsis Object (...)</h2>
 `...`不是一个类型，不过算是一个内置对象。
 
 它没什么特殊的含义，仅表示省略，通常被用在type hints中：
@@ -147,7 +159,7 @@ func是一个没有返回值的函数，参数列表没有做任何限制。
 
 以上就是这些容易被忽略和遗忘的内置类型，如有错误和疏漏欢迎指出。
 
-#### 参考：
+##### 参考：
 https://docs.python.org/3/library/stdtypes.html
 
 https://docs.python.org/3/c-api/buffer.html#bufferobjects
