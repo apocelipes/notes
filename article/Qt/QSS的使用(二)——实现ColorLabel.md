@@ -1,6 +1,6 @@
 在[上一篇文章](https://www.cnblogs.com/apocelipes/p/9959763.html)中，我们已经了解了QSS的基础使用，现在我们将会看到一个简单的例子来加深对QSS的理解。
 
-# 需求分析
+## 需求分析
 我们想要在界面中让文本显示出指定的颜色，现在有几种方案：
 1. 使用paintEvent手动计算文字大小和位置，然后绘制
 2. 利用QLabel可以识别HTML标签的特性实现彩色文字
@@ -25,7 +25,7 @@ print(label.text()) # '<font color="#ff0000">Qt</font>'
 
 最后一种是QSS+QLabel的方案，也是目前我采用的方案。你可能已经猜到了，这种方案兼具QLabel的实用和QSS的简单，也不会在内部保存多余的信息，在牺牲部分灵活性的前提下是最简单也是最合适的解决方案，接下来我们就详细了解下这种方案的实现。
 
-# ColorLabel的实现
+## ColorLabel的实现
 所有的代码在[这里](https://github.com/apocelipes/schannel-qt5/blob/master/widgets/color_label.go)，具体使用可以在我的[项目](https://github.com/apocelipes/schannel-qt5)中看到。
 
 首先是定义默认颜色和QSS模板，模板用于后续的颜色设置：

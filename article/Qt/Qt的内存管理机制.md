@@ -2,7 +2,7 @@
 
 这篇文章里我们将学习QObject & parent对象管理机制，以及QWidget与内存管理这两点Qt的基础知识。
 
-# QObject和内存管理
+## QObject和内存管理
 在Qt中，我们可以大致把对象分为两类，一类是`QObject`和它的派生类；另一类则是普通的C++类。
 
 对于第二种对象，它的生命周期与管理和普通的C++类基本没有区别，而`QObject`和它的派生类则有以下的显著区别：
@@ -83,16 +83,16 @@ dialog.DestroyMyDialog()
 
 当然对于PyQt5来说并不会存在如上的问题，sip库能很好的与python的GC一起工作。唯一需要注意的是有时底层C++对象已经被释放，但是上层python对象依然存在，这时使用该对象将导致抛错。
 
-# 总结
+## 总结
 Qt提供了一套方便的机制帮助我们进行内存和资源管理，使我们从繁重的劳动中得到了部分的解放，但同时也要注意到那些很容易坑，这样才能写出健壮的正确执行的程序。
 
 如有错误之处，欢迎批评指正。
 
 ##### 参考：
-http://doc.qt.io/qt-5/qwidget.html
+[http://doc.qt.io/qt-5/qwidget.html](http://doc.qt.io/qt-5/qwidget.html)
 
-http://doc.qt.io/qt-5/qobject.html
+[http://doc.qt.io/qt-5/qobject.html](http://doc.qt.io/qt-5/qobject.html)
 
-http://doc.qt.io/qt-5/objecttrees.html
+[http://doc.qt.io/qt-5/objecttrees.html](http://doc.qt.io/qt-5/objecttrees.html)
 
-https://stackoverflow.com/questions/20164015/is-deletelater-necessary-in-pyqt-pyside
+[https://stackoverflow.com/questions/20164015/is-deletelater-necessary-in-pyqt-pyside](https://stackoverflow.com/questions/20164015/is-deletelater-necessary-in-pyqt-pyside)
