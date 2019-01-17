@@ -23,7 +23,7 @@ dataclass的定义位于[PEP-557](https://www.python.org/dev/peps/pep-0557/)，�
 1. 相比普通class，dataclass通常不包含私有属性，数据可以直接访问
 2. dataclass的repr方法通常有固定格式，会打印出类型名以及属性名和它的值
 3. dataclass拥有`__eq__`和`__hash__`魔法方法
-4. dataclass有着模式单一固定的初始化方式，或是需要重载运算符，而普通class通常无需这些工作
+4. dataclass有着模式单一固定的构造方式，或是需要重载运算符，而普通class通常无需这些工作
 
 基于上述原因，通常自己实现一个dataclass是繁琐而无聊的，而dataclass单一固定的行为正适合程序为我们自动生成，于是`dataclasses`模块诞生了。
 
@@ -189,7 +189,7 @@ True
 <h3 id="using-inheritance">dataclass继承</h3>
 python3.7引入dataclass的一大原因就在于相比namedtuple，dataclass可以享受继承带来的便利。
 
-`dataclass`装饰器会检查当前class的所有基类，如果发现一个dataclass，就会把它的字段按顺序添加进当前的class，随后再处理当前class的field。所有生成的方法也将按照这一过程处理，因此如果子类中的field与基类同名，那么子类将会无条件覆盖基类。子类将会根据所有的field重新生成一个初始化函数，并在其中初始化基类。
+`dataclass`装饰器会检查当前class的所有基类，如果发现一个dataclass，就会把它的字段按顺序添加进当前的class，随后再处理当前class的field。所有生成的方法也将按照这一过程处理，因此如果子类中的field与基类同名，那么子类将会无条件覆盖基类。子类将会根据所有的field重新生成一个构造函数，并在其中初始化基类。
 
 看个例子：
 ```python
@@ -223,7 +223,7 @@ C(x=15, y=0, z=10)
 - dataclass通常情况下是unhashable的，因为默认生成的`__hash__`是`None`，所以不能用来做字典的key，如果有这种需求，那么应该指定你的数据类为frozen dataclass
 - 小心当你定义了和`dataclass`生成的同名方法时会引发的问题
 - 当使用可变类型（如list）时，应该考虑使用`field`的`default_factory`
-- 数据类的属性都是公开的，如果你有属性只需要初始化是使用而不需要在其他时候被访问，请使用`dataclasses.InitVar`
+- 数据类的属性都是公开的，如果你有属性只需要初始化时使用而不需要在其他时候被访问，请使用`dataclasses.InitVar`
 
 只要避开这些陷阱，dataclass一定能成为提高生产力的利器。
 
