@@ -87,7 +87,7 @@ require (
 
 然而这和我们理想中的版本控制方式似乎还是有些出入，是不是觉得。。。有点不直观？接下来介绍的语义化版本也许能带来一些改观。
 
-<h3 id="#semver">语义化版本</h3>
+<h3 id="semver">语义化版本</h3>
 golang官方推荐的最佳实践叫做`semver`，这是一个简称，写全了就是`Semantic Versioning`，也就是语义化版本。
 
 <h4 id='semver-what'>何谓语义化</h4>
