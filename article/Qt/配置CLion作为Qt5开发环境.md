@@ -57,6 +57,8 @@ find_package(Qt5Widgets REQUIRED)
 
 aux_source_directory(. DIRS_SRCS)
 
+# 通常这样设置就可以，如果你的项目包含qrc文件，那么需要将它们单独添加进来
+# 例如add_executable(test ${DIRS_SRCS} resources.qrc)
 add_executable(test ${DIRS_SRCS})
 
 # 把对应Qt模块的库链接进程序
