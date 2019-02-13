@@ -140,7 +140,7 @@ void ButtonEdit::addButton() {
             &ButtonEdit::buttonClicked);
     // 按钮已经是edit的一部分了，不应该再能被单独聚焦，否则可能导致误触
     button->setFocusPolicy(Qt::NoFocus);
-    // 设置鼠标，否则点击按钮时仍然会显示输入内容是的鼠标图标
+    // 设置鼠标，否则点击按钮时仍然会显示输入内容时的鼠标图标
     button->setCursor(Qt::ArrowCursor);
 
     auto btnLayout = new QHBoxLayout;
@@ -154,7 +154,7 @@ void ButtonEdit::addButton() {
     setTextMargins(0, 0, button->width(), 0);
 }
 ```
-下面就是如何设置button的大小和样式了，大小我们设置和图标/文本的大小一样大，然后两边加上`buttonMargin`。
+下面就是如何设置button的大小和样式了，大小和我们设置的图标/文本的大小一样大，然后两边加上`buttonMargin`。
 
 对于图标按钮我们还要设置按钮背景平时不可见，毕竟图标周围有个`buttonMargin`宽度的框不太好看：
 ```c++
