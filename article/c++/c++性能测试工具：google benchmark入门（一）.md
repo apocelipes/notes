@@ -118,9 +118,11 @@ BENCHMARK_MAIN();
 
 然后我们编译测试程序：
 ```bash
-g++ -Wall -std=c++14 -pthread -lbenchmark benchmark_example.cpp
+g++ -Wall -std=c++14 -pthread benchmark_example.cpp -lbenchmark
 ```
 benchmark需要链接`libbenchmark.so`，所以需要指定`-lbenchmark`，此外还需要thread的支持，因为libstdc++不提供thread的底层实现，我们需要pthread。另外不建议使用`-lpthread`，官方表示会出现兼容问题，在我这测试也会出现链接错误。
+
+文件名最好在`-lbenchmark`之前，否则会出现链接找不到符号的问题。
 
 编译好程序后就可以运行测试了：
 
