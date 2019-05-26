@@ -12,11 +12,13 @@ google/benchmark基于c++11标准和googletest框架，所以安装前需要先�
 首先是安装g++和cmake。
 
 Debian/Ubuntu:
+
 ```bash
 sudo apt install g++ cmake
 ```
 
 Arch Linux/Manjaro Linux:
+
 ```bash
 sudo pacman -s g++ cmake
 ```
@@ -26,6 +28,7 @@ sudo pacman -s g++ cmake
 然后是googletest框架，你可以选择单独安装，不过这里我选择将其作为benchmark源码树的依赖而不单独安装它，因为benchmark在编译安装时需要googletest但是在使用时并不需要，为了篇幅我们选择后者。
 
 准备工作完成后选择一个合适的目录，然后运行下面的命令：
+
 ```bash
 git clone https://github.com/google/benchmark.git
 git clone https://github.com/google/googletest.git benchmark/googletest
@@ -35,6 +38,7 @@ make -j4
 # 如果想全局安装就接着运行下面的命令
 sudo make install
 ```
+
 头文件会被安装至`/usr/local/include`，库文件会安装至`/usr/local/lib`。
 
 现在安装完成了，我们来看看benchmark如何使用。
@@ -43,6 +47,7 @@ sudo make install
 我们的例子将会对比三种访问`std::array`容器内元素方法的性能，进而演示benchmark的使用方法。
 
 先看代码：
+
 ```c++
 #include <benchmark/benchmark.h>
 #include <array>
@@ -117,10 +122,14 @@ BENCHMARK_MAIN();
 示例中大量使用了constexpt，这是为了能在编译期计算出需要的数值避免对测试产生太多噪音。
 
 然后我们编译测试程序：
+
 ```bash
 g++ -Wall -std=c++14 -pthread benchmark_example.cpp -lbenchmark
 ```
+
 benchmark需要链接`libbenchmark.so`，所以需要指定`-lbenchmark`，此外还需要thread的支持，因为libstdc++不提供thread的底层实现，我们需要pthread。另外不建议使用`-lpthread`，官方表示会出现兼容问题，在我这测试也会出现链接错误。
+
+如果你是在Windows平台使用google/benchmark，那么你需要额外链接`shlwapi.lib`才能使benchmark正常编译和运行。详细信息在[这里](https://github.com/google/benchmark/issues/202)。
 
 文件名最好在`-lbenchmark`之前，否则会出现链接找不到符号的问题。
 
@@ -129,6 +138,8 @@ benchmark需要链接`libbenchmark.so`，所以需要指定`-lbenchmark`，此�
 ![benchmark](../../images/c++benchmark/benchmark1)
 
 显示的警告信息表示在当前系统环境有一些噪音（例如其他在运行的程序）可能导致结果不太准确，并不影响我们的测试。
+
+在Windows上通常没有上述警告，如果你需要在Linux平台上去除相关警告的话，请参考[此处](https://github.com/google/benchmark#disabling-cpu-frequency-scaling)。
 
 测试结果与预期基本相符，`std::get`最快，`at()`最慢。
 
