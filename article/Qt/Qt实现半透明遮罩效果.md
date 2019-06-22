@@ -36,6 +36,7 @@
 
 <h2 id="implement">实现遮罩控件</h2>
 先看代码：
+
 ```python
 class MaskWidget(QWidget):
     def __init__(self, parent=None):
@@ -55,6 +56,7 @@ class MaskWidget(QWidget):
         self.setGeometry(0, 0, parent_rect.width(), parent_rect.height())
         super().show()
 ```
+
 遮罩控件的实现相当简单，只需要注意一些细节。
 
 遮罩控件的初始化和普通的自定义控件的过程一样，不过需要注意的是`self.setAttribute(Qt.WA_StyledBackground)`这一行，自定义控件只有设置该属性后才能正常设置背景。
@@ -67,6 +69,7 @@ class MaskWidget(QWidget):
 
 <h2 id="using">遮罩的使用</h2>
 使用遮罩也相当简单：
+
 ```python
 class MyWidget(QWidget):
     """测试遮罩的显示效果
@@ -101,7 +104,9 @@ if __name__ == '__main__':
     w.show()
     app.exec_()
 ```
+
 遮罩的使用分为如下个步骤：
+
 1. 根据需要遮盖的控件创建MaskWidget
 2. 显示遮罩
 3. 在模态对话框关闭后调用`close()`清除遮罩

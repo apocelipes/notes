@@ -58,6 +58,7 @@ vX.Y.Z
 2. 如果目标库没有打上tag，那么就必须毫无差错的编写大串的版本信息，大大加重了使用者的负担
 
 基于以上原因，现在可以直接使用commit的hash来指定版本，如下：
+
 ```text
 # 使用go get时
 go get github.com/mqu/go-notify@ef6f6f49
@@ -70,18 +71,22 @@ require (
   github.com/mqu/go-notify ef6f6f49
 )
 ```
+
 随后我们运行`go build`或`go mod tidy`，这两条命令会整理并更新go.mod文件，更新后的文件会是这样：
+
 ```text
 module my-module
 
 require (
-	github.com/mattn/go-gtk v0.0.0-20181205025739-e9a6766929f6 // indirect
-	github.com/mqu/go-notify v0.0.0-20130719194048-ef6f6f49d093
+    github.com/mattn/go-gtk v0.0.0-20181205025739-e9a6766929f6 // indirect
+    github.com/mqu/go-notify v0.0.0-20130719194048-ef6f6f49d093
 )
 ```
+
 可以看到hash信息自动扩充成了符合要求的版本信息，今后可以依赖这一特性简化包版本的指定。
 
 对于hash信息只有两个要求：
+
 1. 指定hash信息时不要在前面加上`v`，只需要给出commit hash即可
 2. hash至少需要8位，与git等工具不同，少于8位会导致go mod无法找到包的对应版本，推荐与go mod保持一致给出12位长度的hash
 
@@ -113,6 +118,7 @@ golang官方推荐的最佳实践叫做`semver`，这是一个简称，写全了
 正如这句话所说，相同名字的对象应该向后兼容，然而按照语义化版本的约定，当出现`v2.0.0`的时候一定表示发生了重大变化，很可能无法保证向后兼容，这时候应该如何处理呢？
 
 答案很简单，我们为包的导入路径的末尾附加版本信息即可，例如：
+
 ```text
 module my-module/v2
 
@@ -122,9 +128,11 @@ require (
   my/pkg/v3 v3.0.1
 )
 ```
+
 格式总结为`pkgpath/vN`，其中`N`是大于1的主要版本号。在代码里导入时也需要附带上这个版本信息，如`import "some/pkg/v2"`。如此一来包的导入路径发生了变化，也不用担心名称相同的对象需要向后兼容的限制了，因为golang认为不同的导入路径意味着不同的包。
 
 不过这里有几个例外可以不用参照这种写法：
+
 1. 当使用`gopkg.in`格式时可以使用等价的`require gopkg.in/some/pkg.v2 v2.0.0`
 2. 在版本信息后加上`+incompatible`就可以不需要指定`/vN`，例如：`require some/pkg v2.0.0+incompatible`
 3. 使用go1.11时设置`GO111MODULE=off`将取消这种限制，当然go1.12里就不能这么干了
@@ -155,6 +163,7 @@ v2+版本的包允许和其他不同大版本的包同时存在（前提是添�
 replace除了可以将远程的包进行替换外，还可以将本地存在的modules替换成任意指定的名字。
 
 假设我们有如下的项目：
+
 ```bash
 tree my-mod
 
@@ -165,27 +174,33 @@ my-mod
     ├── go.mod
     └── pkg.go
 ```
+
 其中main.go负责调用`my/example/pkg`中的`Hello`函数打印一句“Hello”，`my/example/pkg`显然是个不存在的包，我们将用本地目录的`pkg`包替换它，这是main.go：
+
 ```golang
 package main
 
 import "my/example/pkg"
 
 func main() {
-	pkg.Hello()
+    pkg.Hello()
 }
 ```
+
 我们的pkg.go相对来说很简单：
+
 ```golang
 package pkg
 
 import "fmt"
 
 func Hello() {
-	fmt.Println("Hello")
+    fmt.Println("Hello")
 }
 ```
+
 重点在于go.mod文件，虽然不推荐直接编辑mod文件，但在这个例子中与使用`go mod edit`的效果几乎没有区别，所以你可以尝试自己动手修改my-mod/go.mod：
+
 ```text
 module my-mod
 
@@ -193,6 +208,7 @@ require my/example/pkg v0.0.0
 
 replace my/example/pkg => ./pkg
 ```
+
 至于pkg/go.mod，使用`go mod init`生成后不用做任何修改，它只是让我们的pkg成为一个module，因为replace的源和目标都只能是go modules。
 
 因为被replace的包首先需要被require（wiki说本地替换不用指定，然而我试了报错），所以在my-mod/go.mod中我们需要先指定依赖的包，即使它并不存在。对于一个会被replace的包，如果是用本地的module进行替换，那么可以指定版本为`v0.0.0`(对于没有使用版本控制的包只能指定这个版本)，否则应该和替换包的指定版本一致。
@@ -200,6 +216,7 @@ replace my/example/pkg => ./pkg
 再看`replace my/example/pkg => ./pkg`这句，与替换远程包时一样，只是将替换用的包名改为了本地module所在的绝对或相对路径。
 
 一切准备就绪，我们运行`go build`，然后项目目录会变成这样：
+
 ```bash
 tree my-mod
 
@@ -211,11 +228,14 @@ my-mod
     ├── go.mod
     └── pkg.go
 ```
+
 那个叫my-mod的文件就是编译好的程序，我们运行它：
+
 ```bash
 ./my-mod
 Hello
 ```
+
 运行成功，`my/example/pkg`已经替换成了本地的`pkg`。
 
 同时我们注意到，使用本地包进行替换时并不会生成go.sum所需的信息，所以go.sum文件也没有生成。
@@ -226,16 +246,18 @@ Hello
 如果你因为`golang.org/x/...`无法获取而使用replace进行替换，那么你肯定遇到过问题。明明已经replace的包为何还会去未替换的地址进行搜索和下载？
 
 解释这个问题前先看一个go.mod的例子，这个项目使用的第三方模块使用了`golang.org/x/...`的包，但项目中没有直接引用它们：
+
 ```text
 module schanclient
 
 require (
-	github.com/PuerkitoBio/goquery v1.4.1
-	github.com/andybalholm/cascadia v1.0.0 // indirect
-	github.com/chromedp/chromedp v0.1.2
-	golang.org/x/net v0.0.0-20180824152047-4bcd98cce591 // indirect
+    github.com/PuerkitoBio/goquery v1.4.1
+    github.com/andybalholm/cascadia v1.0.0 // indirect
+    github.com/chromedp/chromedp v0.1.2
+    golang.org/x/net v0.0.0-20180824152047-4bcd98cce591 // indirect
 )
 ```
+
 注意`github.com/andybalholm/cascadia v1.0.0`和`golang.org/x/net v0.0.0-20180824152047-4bcd98cce591`后面的`// indirect`，它表示这是一个间接依赖。
 
 间接依赖是指在当前module中没有直接import，而被当前module使用的第三方module引入的包，相对的顶层依赖就是在当前module中被直接import的包。如果二者规则发生冲突，那么顶层依赖的规则覆盖间接依赖。
@@ -252,6 +274,7 @@ replace唯一的限制是它只能处理顶层依赖。
 这样限制的原因也很好理解，因为对于包进行替换后，通常不能保证兼容性，对于一些使用了这个包的第三方module来说可能意味着潜在的缺陷，而允许顶层依赖的替换则意味着你对自己的项目有充足的自信不会因为replace引入问题，是可控的。相当符合golang的工程性原则。
 
 也正如此replace的适用范围受到了相当的限制：
+
 1. 可以使用本地包替换将生成代码纳入go modules的管理
 2. 对于直接import的顶层依赖，可以替换不能正常访问的包或是过时的包
 3. go modules下import不再支持使用相对路径导入包，例如`import "./mypkg"`，所以需要考虑replace
@@ -278,6 +301,7 @@ golang一直提供了工具选择上的自由性，如果你不喜欢go mod的�
 当然这个命令并不能让你从godep之类的工具迁移到go modules，它只是单纯地把go.sum中的所有依赖下载到vendor目录里，如果你用它迁移godep你会发现vendor目录里的包回合godep指定的产生相当大的差异，所以请务必不要这样做。
 
 我们举第一部分中用到的项目做例子，使用`go mod vendor`之后项目结构是这样的：
+
 ```bash
 tree my-module
 
@@ -299,14 +323,17 @@ my-module
     │           └── notify.go
     └── modules.txt
 ```
+
 可以看到依赖被放入了vendor目录。
 
 接下来使用`go build -mod=vendor`来构建项目，因为在go modules模式下go build是屏蔽vendor机制的，所以需要特定参数重新开启vendor机制:
+
 ```bash
 go build -mod=vendor
 ./my-module
 a notify!
 ```
+
 构建成功。当发布时也只需要和使用godep时一样将vendor目录带上即可。
 
 <h3 id="release-version">注意包版本</h3>

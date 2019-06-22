@@ -19,15 +19,17 @@
 </blockquote>
 
 ## 需求定义
+
 我们的需求很简单，现在有一些在view中的text内容需要使用彩色显示，而且不使用单一的一种颜色，而是多种颜色渐变实现的彩虹效果。
 
 文字描述可能比较抽象，所以我们先给出预想的效果图：
 
-![](../../images/color-delegate/sample.png)
+![sample](../../images/color-delegate/sample.png)
 
 现在让我们想办法实现图中的效果。
 
 ## 需求分析
+
 好在Qt的Model/View机制对于用户自定义的外观控制提供了极为丰富的支持，因此我们可以轻松地实现许多独特的显示效果。
 
 通常情况下，对于像按特定颜色显示内容的需求只需要在model的data接口中根据调用时的`Qt::ItemDataRole`返回对应的数据即可，比如控制文本颜色时我们只需要对`Qt::ForegroundRole`返回指定的`QBrush`对象就可以。
@@ -43,7 +45,9 @@
 现在已经清楚实现我们的需求的思路了，接下来我们看看如何用代码实现它。
 
 ## 代码实现
+
 我们只需要继承`QStyledItemDelegate`并重写它的`paint`和`sizeHint`方法：
+
 ```c++
 class ColorDelegate : public QStyledItemDelegate {
 public:
@@ -58,6 +62,7 @@ public:
 其中`paint`用来绘制我们的显示效果，而`sizeHint`则返回item的大小。
 
 对于`sizeHint`没有什么特别的操作，单纯计算文字的长度和高度，然后基于这连个值指定item的大小：
+
 ```c++
 QSize ColorDelegate::sizeHint(const QStyleOptionViewItem &option,
                               const QModelIndex &index) const {
@@ -68,6 +73,7 @@ QSize ColorDelegate::sizeHint(const QStyleOptionViewItem &option,
 ```
 
 下面就要进入重点了：
+
 ```c++
 void ColorDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option,
                           const QModelIndex &index) const {
@@ -116,6 +122,7 @@ void ColorDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option,
 至于delegate的其他功能，我们选择继续使用父类的默认实现，因为我们只是使用delegate控制显示效果的功能，并不需要实现和数据的交互。
 
 下面我们测试下自定义的`ColorDelegate`：
+
 ```c++
 #include <QApplication>
 #include <QStandardItemModel>
@@ -151,11 +158,12 @@ int main(int argc, char **argv) {
 
 运行之后你就会看到如下图的界面：
 
-![](../../images/color-delegate/testrun.png)
+![running](../../images/color-delegate/testrun.png)
 
 虽然文字较短时某些位于边缘的颜色有些难以辨认，但整体的彩虹色渐变效果是很明显的。这样我们就实现了文字的彩虹渐变效果。
 
 ## 思考题
+
 最后我们以一个小问题结尾。
 
 虽然我们实现了需求，但是我们的delegate只能处理文字居中的情况，那么其他对齐的情况下呢？

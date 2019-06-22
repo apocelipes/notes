@@ -10,7 +10,7 @@ QLineEdit是使用频率最高的控件之一，当我们想获取用户输入�
   <h4>本文索引</h4>
   <ul>
     <li>
-      <a href="#引论">引论</a>
+      <a href="#导论">导论</a>
     </li>
     <li>
       <a href="#实现customdateedit">实现CustomDateEdit</a>
@@ -35,12 +35,13 @@ QLineEdit是使用频率最高的控件之一，当我们想获取用户输入�
   </ul>
 </blockquote>
 
-## 引论
+## 导论
+
 这一节将带你概览QLineEdit对数据的处理，并以一个示例引出后续章节的内容。你可以先在此处找到一些粗浅的回答，后续则会有详细的解释。
 
 如果要简单的回答第一问，那么在我们获取到text内容前需要经过两个步骤：
 
-![](../../images/lineedit-pickup/line-edit-process.jpg)
+![line-edit-process](../../images/lineedit-pickup/line-edit-process.jpg)
 
 它们分别由`inputMask`和`QValidator`实现，前者负责过滤用户的输入，后者则用于过滤后的信息的验证。
 
@@ -50,14 +51,16 @@ QLineEdit是使用频率最高的控件之一，当我们想获取用户输入�
 
 两问回答完毕，现在该来看看本文的示例了。这次我们将自己实现一个`DateEdit`（我知道有现成的QDateEdit，不过这里请允许我为了实践所学而造一个粗糙的轮子），并根据用户输入的日期计算当天是周几，效果如下：
 
-![](../../images/lineedit-pickup/sample.gif)
+![sample](../../images/lineedit-pickup/sample.gif)
 
 ## 实现CustomDateEdit
+
 在本节中我们将逐步实现CustomDateEdit，并详细介绍引论中提到的概念。
 
 按照流程图的顺序，我们首先要讲解的便是输入数据的过滤——`inputMask`的功能。
 
 ### 过滤用户输入——inputMask
+
 在具体介绍一个能控制显示效果的特性前，我习惯于先描述其大致功能和具体的显示效果。
 
 inputMask的功能：它是一串特定的规则，所有不符合规则的用户输入都会被丢弃，用户不管是从信号还是`text`槽都只能获取符合mask要求的输入数据，当然这个“用户”包括我们后面要介绍的`QValidator`及其派生类。
@@ -66,30 +69,31 @@ inputMask的显示效果：你只能输入合法的字符，输入非法字符�
 
 inputMask就是一串由特殊字符组成的规则，通过规则给定的格式来控制文本的输入，具体的规则见下表：
 
-| 特殊字符 | 对应规则 |
-| ------ | ------ |
-| A | 必须输入的ascii字母，包括A-Z，a-z |
-| a | 和`A`一样，但是可选，也就是不输入这个字符也可以，占位符将保留 |
-| N | 必须输入的ascii字母和数字，包括A-Z，a-z，0-9 |
-| n | 和`N`一样，但是可选 |
-| X | 必须输入的任意字符 |
-| x | 和`X`一样，但是可选 |
-| 9 | 必填的ascii的数字字符，包括0-9 |
-| 0 | 和`9`一样，但是可选 |
-| D | 必填的数字，包括1-9 |
-| d | 和`D`一样，但可选 |
-| # | 可选的数字或者加减号 |
-| H | 必填的16进制的数字，包括A-F, a-f, 0-9 |
-| h | 和`H`一样，但可选 |
-| B | 必填的二进制数字，包括0和1 |
-| b | 和`B`一样，但可选 |
-| > | 所有在这个特殊字符之后的字符转换为大写 |
-| < | 所有在这个特殊字符之后的字符转换为小写 |
-| ! | 关闭前面的大小写转换 |
-| [ ] { } | 保留的特殊字符 |
-| \ | 将特殊字符转义为普通字符 |
+| 特殊字符 | 对应规则                                                      |
+| -------- | ------------------------------------------------------------- |
+| A        | 必须输入的ascii字母，包括A-Z，a-z                             |
+| a        | 和`A`一样，但是可选，也就是不输入这个字符也可以，占位符将保留 |
+| N        | 必须输入的ascii字母和数字，包括A-Z，a-z，0-9                  |
+| n        | 和`N`一样，但是可选                                           |
+| X        | 必须输入的任意字符                                            |
+| x        | 和`X`一样，但是可选                                           |
+| 9        | 必填的ascii的数字字符，包括0-9                                |
+| 0        | 和`9`一样，但是可选                                           |
+| D        | 必填的数字，包括1-9                                           |
+| d        | 和`D`一样，但可选                                             |
+| #        | 可选的数字或者加减号                                          |
+| H        | 必填的16进制的数字，包括A-F, a-f, 0-9                         |
+| h        | 和`H`一样，但可选                                             |
+| B        | 必填的二进制数字，包括0和1                                    |
+| b        | 和`B`一样，但可选                                             |
+| >        | 所有在这个特殊字符之后的字符转换为大写                        |
+| <        | 所有在这个特殊字符之后的字符转换为小写                        |
+| !        | 关闭前面的大小写转换                                          |
+| [ ] { }  | 保留的特殊字符                                                |
+| \        | 将特殊字符转义为普通字符                                      |
 
 inputMask的格式为：`([特殊字符]|[普通字符])*;占位符`，分号后跟的是占位符，用于填充特殊字符留下的空位，默认为空格。下面看些例子：
+
 1. `000,000.00;_`：用于输入一个最大6位，有两位小数的值，用`_`填充空位，edit会显示出类似`___,___.__`的效果
 2. `>AAAA-AAAA!-AAAA-AAAA`：用于输入一个由连字符分割的字母数字组成的uuid或license key，且前八个字母会被转换为大写，在edit中显示为`    -    -    -    `
 3. `9999年09月09日`：用于输入年月日的时间格式，可以输入`2019年03月14日`或`2019年3月14日`，显示效果在引论的效果图中。
@@ -98,6 +102,7 @@ inputMask的格式为：`([特殊字符]|[普通字符])*;占位符`，分号后
 你可以通过`setInputMask`设置mask，或`inputMask`获取当前的mask。
 
 通过上面的说明和例子你应该已经学会了inputMask的使用，现在可以看看它与validator的区别了：
+
 1. inputMask在用户进行输入时进行过滤，并且只存在符合规则和不符合两种状态，validator通常拥有第三种状态
 2. inputMask只能过滤较为固定的格式，并且对于输入的最大长度产生限制，validator则要灵活的多
 
@@ -106,6 +111,7 @@ inputMask的格式为：`([特殊字符]|[普通字符])*;占位符`，分号后
 因此想要获得正确的数据，我们还需要验证器来帮忙。
 
 ### 数据验证——QValidator
+
 现在该验证我们的输入了。因为有了inputMask的帮助，现在我们只需要验证数据本身是否正确而不用操心它的格式了，真是谢天谢地。
 
 等等，这么说好像不太对，validator拿到的数据里居然还保留着mask的占位符？你没看错，这不是bug，能在edit里显示出来的数据那么一定能被获得，mask本身的占位符是能通过过滤的，所以它会原封不动地传给validator，只有用户输入合法的数据后这些占位符才会被覆盖。所以在写自己的验证器的时候要小心了——我们需要先删除所有的占位符，因为它们不是数据的一部分！
@@ -121,6 +127,7 @@ inputMask的格式为：`([特殊字符]|[普通字符])*;占位符`，分号后
 `QValidator`本身是一个纯虚基类，派生类需要实现`QValidator::State QValidator::validate(QString &input, int &pos) const`进行数据的验证，还有一个可选的`fixup`函数用于修复输入，不过一般来说很少有自行修复输入的需求，所以这里使用默认的实现，也就是什么都不做。
 
 `validate`验证数据后返回数据是否合法，有`QValidator::State`类型的值表示：
+
 - `QValidator::Invalid` 数据不合法
 - `QValidator::Intermediate` 数据不完整需要进一步的输入
 - `QValidator::Acceptable` 数据合法
@@ -132,6 +139,7 @@ PyQt5中的接口稍微有些不同，处理第一个返回值的为`QValidator:
 因为额外引入了第三种状态，所以实现一个validator远比设置inputMask来的复杂，这里我们实现一个自定义的日期验证器用于配合`CustomDateEdit`（我知道这个工作交给QRegExpValidator会很简单），同时介绍如何实现一个验证器。
 
 下面看看具体的代码，首先我们不需要为validator额外增加内容，只需要实现几个方法，因此不要要关注构造等行为：
+
 ```python
 class CustomDateValidator(QValidator):
     """验证输入的是否是合法的年月日
@@ -165,6 +173,7 @@ class CustomDateValidator(QValidator):
 ```
 
 可以看到验证器的逻辑其实很简单。整个验证器加上帮助函数一共做了三件事：
+
 1. 首先去除占位符，如前文所述
 2. 接着将输入信息按年月日分割，如果有某一部分为空则代表输入不完整
 3. 对于完整的输入则使用arrow解析成时间对象，失败则表示输入数据错误
@@ -174,6 +183,7 @@ class CustomDateValidator(QValidator):
 如此一来我们既验证了数据的合法性又处理了所有可能的输入情况。当然，通常我更建议你使用现有的`QDoubleValidator`和`QRegExpValidator`等现有的验证器，或将它们组合使用，这样更简单也更不容易出错。
 
 ### 自动补全——QCompleter
+
 我们已经讲解了输入的过滤和验证，最后该讲讲补全了。
 
 可以说过滤和验证是比较常用的功能的话，那补全就没有那么常见了。或者说，通常我们不需要关心它，比如`QComboBox`自带了QCompleter，它工作得也很好，所以我们往往忽略了它的存在。当然不只是下拉框，在`QLineEdit`中我们也可以用它和它的派生类实现补全效果。
@@ -189,6 +199,7 @@ class CustomDateValidator(QValidator):
 可以看到只要把我们用于补全输入的数据放入合适的model中，再把model设置给completer，就能实现补全功能了。
 
 下面看个设置completer的例子：
+
 ```python
 # model是一个QStandardItemModel，后面我们也会使用这个model来设置completer
 completer = QCompleter()
@@ -202,7 +213,9 @@ edit.setCompleter(completer)
 现在我们已经把`QLineEdit`的数据处理流程介绍了一遍，有了这些预备知识下面该实现`CustomDateEdit`了。
 
 ### CustomDateEdit的实现
+
 我们先来看代码，细节问题基本在注释中给出了说明：
+
 ```python
 class CustomDateEdit(QLineEdit):
     def __init__(self, parent=None):
@@ -247,11 +260,13 @@ class CustomDateEdit(QLineEdit):
 整个dateEdit的实现也很简单，所有复杂的逻辑都已经交给了inputMask，验证器和completer，而我们唯一要做的是为completer添加新输入的合法的数据，这在类方法`addDateRecord`中完成了。
 
 ## 测试CustomDateEdit
+
 实现`CustomDateEdit`之后，我们就要动手实现引论一节中的程序了。
 
 前面已经说过，最终通过信号传递或者由槽函数获取到的值一定是通过了过滤和验证通过的值。所以想实现引论中的程序我们只需要正确处理`CustomDateEdit`的信号即可。
 
 下面直接上测试代码：
+
 ```python
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
@@ -286,7 +301,7 @@ if __name__ == '__main__':
 
 当用户输入一个完整的日期后，按下回车键，程序会自动计算结果并更新到下方的label上。很简单的程序，主要就是为了测试我们的`CustomDateEdit`：
 
-![](../../images/lineedit-pickup/testrun.gif)
+![test run](../../images/lineedit-pickup/testrun.gif)
 
 程序的行为和预想的差不多，现在你已经初步掌握所学的知识了。
 

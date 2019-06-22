@@ -1,7 +1,8 @@
 # 写作建议
+
 article中所有文章应尽量遵循本建议的指导。
 
-1. ## Markdown语法：
+1. ## Markdown语法
 
   1.1 使用github兼容的markdown语法
 
