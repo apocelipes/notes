@@ -147,6 +147,40 @@ func BenchmarkDeepEqual(b *testing.B) {
 
 ![benchmark](../../images/golang-slice-equal/benchmark.jpg)
 
+如果我们把slice的长度设为1000，那么差距就会更加明显：
+
+```golang
+func genDiffSlice(size int) ([]uint32, []uint32) {
+    a := make([]uint32, 0, size)
+    rand.Seed(time.Now().UnixNano())
+    for i := 0; i < size; i++ {
+        a = append(a, rand.Uint32())
+    }
+    b := make([]uint32, len(a))
+    copy(b, a)
+    b[len(b)-1] = rand.Uint32()
+    return a, b
+}
+
+func BenchmarkTestEq2(b *testing.B) {
+    a, c := genDiffSlice(1000)
+    b.ResetTimer()
+    for i := 0; i < b.N; i++ {
+        _ = testEq(a, c)
+    }
+}
+
+func BenchmarkDeepEqual2(b *testing.B) {
+    a, c := genDiffSlice(1000)
+    b.ResetTimer()
+    for i := 0; i < b.N; i++ {
+        _ = reflect.DeepEqual(a, c)
+    }
+}
+```
+
+![benchmark 1000 slice elements](../../images/golang-slice-equal/benchmark2.jpg)
+
 自己手写判断的性能更好，但是有个显而易见的弊端，当我们有多种类型的slice时我们就不得不编写不同版本的`testEq`，而它们唯一的不同仅仅只有slice的类型。
 
 不过等到go2的泛型可以使用的时候，这样的弊端也就不复存在了，现在我们需要的是在代码的复杂度和运行性能上做出权衡。
