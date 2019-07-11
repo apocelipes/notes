@@ -4,7 +4,8 @@
 
 所以我将介绍配置CLion（另一个强大的c++ IDE）作为Qt5的开发环境，在利用现有工具链的同时避免了安装另一个大型软件。
 
-<h2 id="perpare">准备工作</h2>
+## 准备工作
+
 CLion的安装和激活超出了本文的讨论范围，我们假设你已经安装好了CLion。如果需要帮助可以去CLion官网查找安装方法。
 
 CLion默认使用GCC进行工程构建，然而使用GCC是无法使用代码补全功能的，所以我们将toolchains替换成clang：
@@ -15,7 +16,8 @@ CLion默认使用GCC进行工程构建，然而使用GCC是无法使用代码补
 
 随后确保你的编译器至少要支持c++11，如果能支持c++14或者c++17那自然是最好。
 
-<h2 id="create-project">创建Qt5项目</h2>
+## 创建Qt5项目
+
 下面是创建Qt5项目，CLion没有区分普通c++项目和Qt项目（毕竟Qt项目一般也是c++项目或者c++/QML项目），所以这样创建即可：
 
 ![create project](../../images/clion-settings-qt5/create-project.png)
@@ -28,7 +30,8 @@ CLion默认使用GCC进行工程构建，然而使用GCC是无法使用代码补
 
 这时编译运行和代码补全还是不能用的，所以接下来我们设置编译和代码补全。
 
-<h2 id="settings">设置Qt代码补全和项目编译</h2>
+## 设置Qt代码补全和项目编译
+
 事先要说明的一点是，CLion是根据`CMakeLists.txt`文件来组织和设置项目的，所以如果我们需要添加诸如Qt这样的第三方库或是改变编译行为，都只要修改`CMakeLists.txt`即可。
 
 所以我们需要把`CMakeLists.txt`修改成如下的样子：
@@ -45,17 +48,21 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-
 # 设置Qt5的cmake模块所在目录，如果不设置将使用系统提供的版本
 # QT_DIR和QT_VERSION是指定了qt安装目录和版本的环境变量
-# 如果你使用了系统的cmake，那么会优先使用系统提供模块，如果不想发生这种行为你需要自己运行cmake或者使用CLion自带的
-set(CMAKE_PREFIX_PATH $ENV{QT_DIR}/$ENV{QT_VERSION}/gcc_64/lib/cmake)
+# 如果你使用了系统的cmake，那么会优先使用系统提供模块，因为cmake会优先搜索CMAKE_SYSTEM_PREFIX_PATH
+# 如果你不想让cmake优先搜索系统目录（会导致编译使用系统安装的qt而不是我们配置的），需要提示find_package命令
+set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} $ENV{QT_DIR}/$ENV{QT_VERSION}/gcc_64/lib/cmake)
 
 # 找到对应的qt模块，名字为qmake中QT += <name>中的name首字母大写后加上Qt5前缀
 # 例如core为QtCore，你也可以去${CMAKE_PREFIX_PATH}的目录中找到正确的模块名
-find_package(Qt5Widgets REQUIRED)
+# 如果不想使用系统qt，这样写（注意NO_DEFAULT_PATH参数，它会让find_package跳过系统目录的查找）：
+find_package(Qt5Widgets REQUIRED NO_DEFAULT_PATH)
 
+# 如果你想要使用系统自带的qt，这样写：
+# find_package(Qt5Widgets REQUIRED)
+
+# 将当前目录的所有源文件添加进变量
 aux_source_directory(. DIRS_SRCS)
 
 # 通常这样设置就可以，如果你的项目包含qrc文件，那么需要将它们单独添加进来
@@ -74,7 +81,8 @@ target_link_libraries(test Qt5::Widgets)
 
 CLion会自动生成新的Makefile用于编译项目，现在代码补全也可以使用了。
 
-<h2 id="compile">编译项目</h2>
+## 编译项目
+
 我们先写一个小的示例，让一个spinbox和slider可以相互联动：
 
 ```c++
