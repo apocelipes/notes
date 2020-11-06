@@ -174,7 +174,7 @@ bool QueuePush(Queue* q, void* value)
 It works! 但是我们需要队列中的类型有特定操作呢？把操作抽象形成函数再传递给队列的方法就行了，可以参考c的qsort和bsearch：
 
 ```c++
-#include <sdtlib.h>
+#include <stdlib.h>
 
 void qsort(void *base, size_t nmemb, size_t size,
                   int (*compar)(const void *, const void *));
