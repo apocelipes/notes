@@ -232,7 +232,23 @@ var txt2 string
 | string | 表示数据被编码成utf8编码的字符串，因此不要用这个格式嵌入二进制文件比如图片，引入embed的规则同[]byte |
 | embed.FS | 表示存储多个文件和目录的结构，[]byte和string只能存储单个文件 |
 
-下面看个具体例子，目录结构如下：
+实际上接受嵌入文件数据的变量也可以是string和[]byte的类型别名或基于他们定义的新类型，例如下面的代码那样：
+
+```golang
+type StringAlias = string
+
+//go:embed a.txt
+var text1 StringAlias
+
+type NewBytes []byte
+
+//go:embed b.txt
+var text2 NewBytes
+```
+
+这一变化是[issue 43602](https://github.com/golang/go/issues/43602)中提出的，并在[commit ec94701](https://github.com/golang/go/commit/ec9470162f26819abd7b7bb86dd36cfe87f7f5bc)中实现。
+
+下面我们看个更具体例子，目录结构如下：
 
 ```bash
 $ tree -sh .
@@ -281,15 +297,35 @@ import (
 //go:embed macbeth.txt
 var macbeth string
 
-func main(){
+//go:embed texts/en.txt
+var hello string
+
+func main() {
     fmt.Println(len(macbeth)) // 麦克白的总字符数
-    //go:embed texts/en.txt
-    var hello string
     fmt.Println(hello) // Output: Hello, world
 }
 ```
 
-如你所见，嵌入内容声明可以放进任意作用域，但变量一定要求用`var`声明。直接使用`newgo run embed_txt.go`或`go build embed_txt.go && ./embed_txt`即可完成编译运行，过程中不会生成任何中间代码。另外变量是否是公开的（首字母是否大小写）并不会对资源的嵌入产生影响。
+如你所见，声明嵌入内容的变量一定要求使用`var`声明。我们直接用`newgo run embed_txt.go`或`go build embed_txt.go && ./embed_txt`即可完成编译运行，过程中不会生成任何中间代码。另外变量是否是公开的（首字母是否大小写）并不会对资源的嵌入产生影响。
+
+在[issue 43216](https://github.com/golang/go/issues/43216)中，基于如下的矛盾golang取消了对本地作用域变量的嵌入资源声明的支持：
+
+1. 如果嵌入资源只初始化一次，那么每次函数调用都将共享这些资源，考虑到任何函数都可以作为goroutine运行，这会带来严重的潜在风险；
+2. 如果每次函数调用时都重新初始化，这样做会产生昂贵的性能开销。
+
+因此最后golang官方在[commit 54198b0](https://github.com/golang/go/commit/54198b04dbdf424d8aec922c1f8870ce0e9b7332)中关闭了本地作用域的静态资源嵌入功能。现在你的代码应该这样写：
+
+```diff
++ //go:embed hello.txt
++ var hello string
+
+func Print() {
+-   //go:embed hello.txt
+-   var hello string
++   embedString := hello
+    ....
+}
+```
 
 再来看看二进制文件的例子，embed_img.go如下所示：
 
