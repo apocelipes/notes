@@ -296,8 +296,6 @@ QTranslator trans;
 
 ![zh](../../images/cmake-qt-i18n/zh.png)
 
-## 总结
-
 现在我把完整的CMakeLists.txt贴上来作为参考，对于你自己的项目当然是要做调整的：
 
 ```cmake
@@ -330,6 +328,66 @@ message(${QM_FILES})
 target_link_libraries(${PROJECT_NAME} ${REQUIRED_LIBS_QUALIFIED})
 ```
 
-不过这种方案也不是没有问题，那就是每次只能在编译期间更新ts文件，这点需要注意。
+## 更进一步
+
+现在你已经能用clion管理自己的多语言支持项目了，然而目前的方案仍称不上完美。
+
+因为对ts文件的更新和qm文件的创建必须在编译期间进行，无法单独进行上述的工作。根据文档的说法来看，对于多语言的支持通常是在软件本身功能基本完善之后进行的，ts文件和qm文件不会经常进行变更，所以在编译期间一并处理是可以接受的。
+
+不过事实上软件的功能往往会增量更新，翻译也会进行订正和改进，为此需要重新编译整个项目作为代价显然太过高昂。
+
+那么能不能把i18n的处理独立出来呢，答案是可以的，不过我们不能再借助LinguistTools了。因为LinguistTools在内部使用的是`add_custom_command`，无法独立构成一个编译目标，所以得另寻出路。
+
+下面来看看修改后的代码：
+
+```cmake
+# 去掉了LinguistTools
+find_package(Qt${QT_VERSION} COMPONENTS ${REQUIRED_LIBS} REQUIRED)
+
+# 创建生成ts文件和qm文件的目标
+# ALL指定加入make all
+add_custom_target(update_all_ts_files ALL)
+add_custom_target(create_all_qm_files ALL)
+
+# 找到$PATH里的lupdate和lrelease，你也可以自己设置他们的安装路径
+find_file(LUPDATE_PATH lupdate)
+find_file(LRELEASE_PATH lrelease)
+
+# 对于每一个ts文件，都生成一个update_ts_file_<NAME>和create_qm_file_<NAME>目标
+foreach(TS_FILE ${TS_FILES})
+    # 把zh_CN.ts中的zh_CN提取出来
+    get_filename_component(I18N_NAME ${TS_FILE} NAME_WE)
+    set(TS_TARGET_NAME "update_ts_file_${I18N_NAME}")
+    add_custom_target(${TS_TARGET_NAME}
+            COMMAND ${LUPDATE_PATH} ${CMAKE_CURRENT_SOURCE_DIR} -ts ${TS_FILE}
+            VERBATIM)
+    # 将update_ts_file_<NAME>添加为update_all_ts_files的依赖，下同
+    add_dependencies(update_all_ts_files ${TS_TARGET_NAME})
+    set(QM_TARGET_NAME "create_qm_file_${I18N_NAME}")
+    set(QM_FILE "${CMAKE_CURRENT_BINARY_DIR}/${I18N_NAME}.qm")
+    add_custom_target(${QM_TARGET_NAME}
+            COMMAND ${LRELEASE_PATH} ${TS_FILE} -qm ${QM_FILE}
+            VERBATIM)
+    # 因为得先有ts文件才能生成qm文件，所以把构建ts文件的目标作为自己的依赖
+    add_dependencies(${QM_TARGET_NAME} ${TS_TARGET_NAME})
+    add_dependencies(create_all_qm_files ${QM_TARGET_NAME})
+endforeach()
+
+configure_file(translations.qrc ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
+
+add_executable(${PROJECT_NAME} main.cpp ${CMAKE_CURRENT_BINARY_DIR}/translations.qrc)
+# 因为qrc依赖qm文件，所以需要先让qm文件创建完成
+add_dependencies(${PROJECT_NAME} create_all_qm_files)
+```
+
+看上去很复杂，然而实际上上面的代码只做了一件事，生成了如下的依赖链：
+
+![chain](../../images/cmake-qt-i18n/target_chain.jpg)
+
+现在更新ts文件和生成qm文件都可以作为单独的步骤而存在了，这是`qt5_create_translation`和`qt5_add_translation`做不到的：
+
+![run](../../images/cmake-qt-i18n/run_targets.png)
+
+现在我们可以任意更改翻译而不用重新编译整个项目了，自己动手丰衣足食。
 
 如果想要看更具体的项目是如何配置i18n的，我这也有一个[例子](https://github.com/apocelipes/pHashChecker)，如果不嫌弃觉得有帮助的话可以star一下。
