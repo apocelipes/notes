@@ -26,9 +26,9 @@ tuple和其他的容器不同，标准库没有提供适用于tuple的迭代器�
 
 为什么要遍历tuple呢？通常我们确实不需要逐个遍历tuple的数据，通过使用get取出特定位置的元素就满足大部分的应用需求了。
 
-但是，偶尔我们也会想要把某一个泛型算法应用到tuple的每一个成员上，虽然不多见但也确实有需求的场景存在。
+但偶尔我们也会想要把某一个泛型算法应用到tuple的每一项成员上，虽然不多见但也确实有需求的场景存在。因此如何实现对tuple的遍历就被摆上了议程。
 
-然而get需要的索引只能是编译期常量，这导致我们无法依赖现有的循环语句去实现索引的递增，因此只有两条路可供选择：硬编码每一项索引和模板元编程。我是个不喜欢硬编码的人，所以我选择了后者。
+然而遗憾的是get需要的索引只能是编译期常量，这导致我们无法依赖现有的循环语句去实现索引的递增，因此只有两条路可供选择：硬编码每一项索引和模板元编程。我是个不喜欢硬编码的人，所以我选择了后者。
 
 把STL里的通用容器算法实现一遍工程量太大了，而且很明显一篇文章也讲不完。我决定实现标准库里的`for_each`，正好也契合今天的主题——遍历tuple。
 
@@ -40,19 +40,31 @@ tuple和其他的容器不同，标准库没有提供适用于tuple的迭代器�
 
 当然，c++17里tuple是constexpr类型，所以你还可以给我们的`for_each`加上constexpr。
 
+函数内部要做的事其实也很简单，就是对每一项元素调用f即可，在这里我们不考虑其他一些细节，我们的接口形式上应该是这样子的（伪代码）：
+
+```c++
+template <class Tuple, class Functor>
+constexpr void for_each_tuple(const Tuple &t, Functor &&f)
+{
+    for element in t {
+        f(t);
+    }
+}
+```
+
 ## 实现接口
 
-接口设计好了，下面我们就该实现它了。
+接口设计好了，下面我们就该实现`for element in t`的部分了。
 
-我会介绍三种实现遍历tuple的方法，以及一种存在缺陷的方法，首先我们从最原始的方案开始。
+接下来我会介绍三种实现遍历tuple的方法，以及一种存在缺陷的方法，首先我们从最原始的方案开始。
 
 ### 初步尝试
 
-距离c++11发布已经快整整十年了，想必大家也习惯于书写c++11的代码了。不过让我们把时间倒流回c++03时代，那时候既没有constexpr，也没有变长模板参数，相当的原始而蛮荒。
+距离c++11发布已经快整整十年了，想必大家也习惯于书写c++11的代码了。不过让我们把时间倒流回c++11前的时代，那时候既没有constexpr，也没有变长模板参数，相当的原始而蛮荒。
 
-那么问题来了，那时候有tuple吗？当然有，boost里的tuple的历史可长了。
+那么问题来了，那时候有tuple吗？当然有，boost里的tuple的历史在c++11前就已经开始了。
 
-其中的秘诀就在于模板递归，这是一种经典的元编程手段，我们的foreach也需要借助这种技术。
+其中的秘诀就在于模板递归，这是一种经典的元编程手段，解铃还须系铃人，我们的foreach也需要借助这种技术。
 
 现在我们来看一下不使用编译期计算和变长模板参数的原始方案：
 
@@ -105,12 +117,13 @@ void for_each_tuple_impl(Tuple &&t, Functor &&f)
         return;
     } else {
         f(std::get<Index>(t));
+        // 注意下面这行
         for_each_tuple_impl<Tuple, Functor, Index+1>(std::forward<Tuple>(t), std::forward<Functor>(f));
     }
 }
 ```
 
-编译器在编译函数的时候是需要把所有条件分支都编译的，所以即使是在函数模板的实例达到退出递归的条件，else分支仍然会被编译，而在这个分支里模板会被不断递归实例化，最终超过允许的最大递归深度。
+编译器在编译函数的时候是需要把所有条件分支都编译的，__所以即使是在函数模板的实例达到退出递归的条件，else分支仍然会被编译__，而在这个分支里模板会被不断递归实例化，最终超过允许的最大递归深度。
 
 这里就引出了模板递归的一个重要规则：**我们应该用模板特化或是函数重载来实现递归的终止条件**
 
@@ -129,10 +142,10 @@ void for_each_tuple_impl(Tuple &&t, Functor &&f)
 所以一个真正通用的古典实现可以写出下面这样：
 
 ```c++
-template <typename Tuple, typename Functor, int Start, int End>
+template <typename Tuple, typename Functor, std::size_t Start, std::size_t End>
 struct classic_for_each_tuple_helper
 {
-    constexpr void operator()(const Tuple &t, Functor &&f)
+    constexpr void operator()(const Tuple &t, Functor &&f) const
     {
         f(std::get<Start>(t));
         classic_for_each_tuple_helper<Tuple, Functor, Start + 1, End>{}(t, std::forward<Functor>(f));
@@ -147,10 +160,10 @@ struct classic_for_each_tuple_helper
 我们每次给Start递增1，那么最后我们的Start一定会等于甚至超过End。没错，这就是我们的停止条件：
 
 ```c++
-template <typename Tuple, typename Functor, int End>
+template <typename Tuple, typename Functor, std::size_t End>
 struct classic_for_each_tuple_helper<Tuple, Functor, End, End>
 {
-    constexpr void operator()(const Tuple &t, Functor &&f)
+    constexpr void operator()(const Tuple &t, Functor &&f) const
     {
         f(std::get<End>(t));
     }
@@ -187,24 +200,47 @@ classic_for_each_tuple(std::make_tuple(1, 2, 3, "hello", "world", 3.1415, 2.7183
 ```bash
 $ nm a.out | grep classic_for_each_tuple_helper
 
-00000000000031ae t _ZN29classic_for_each_tuple_helperISt5tupleIJiiiPKcS2_ddEEZ4mainEUlRKT_E2_Li0ELi6EEclERKS3_OS7_
-00000000000034c8 t _ZN29classic_for_each_tuple_helperISt5tupleIJiiiPKcS2_ddEEZ4mainEUlRKT_E2_Li1ELi6EEclERKS3_OS7_
-00000000000036a2 t _ZN29classic_for_each_tuple_helperISt5tupleIJiiiPKcS2_ddEEZ4mainEUlRKT_E2_Li2ELi6EEclERKS3_OS7_
-000000000000391e t _ZN29classic_for_each_tuple_helperISt5tupleIJiiiPKcS2_ddEEZ4mainEUlRKT_E2_Li3ELi6EEclERKS3_OS7_
-0000000000003a3e t _ZN29classic_for_each_tuple_helperISt5tupleIJiiiPKcS2_ddEEZ4mainEUlRKT_E2_Li4ELi6EEclERKS3_OS7_
-0000000000003b6c t _ZN29classic_for_each_tuple_helperISt5tupleIJiiiPKcS2_ddEEZ4mainEUlRKT_E2_Li5ELi6EEclERKS3_OS7_
-0000000000003be6 t _ZN29classic_for_each_tuple_helperISt5tupleIJiiiPKcS2_ddEEZ4mainEUlRKT_E2_Li6ELi6EEclERKS3_OS7_
+00000000000031d6 t _ZNK29classic_for_each_tuple_helperISt5tupleIJiiiPKcS2_ddEEZ4mainEUlRKT_E2_Lm0ELm6EEclERKS3_OS7_
+00000000000034f0 t _ZNK29classic_for_each_tuple_helperISt5tupleIJiiiPKcS2_ddEEZ4mainEUlRKT_E2_Lm1ELm6EEclERKS3_OS7_
+00000000000036ca t _ZNK29classic_for_each_tuple_helperISt5tupleIJiiiPKcS2_ddEEZ4mainEUlRKT_E2_Lm2ELm6EEclERKS3_OS7_
+0000000000003946 t _ZNK29classic_for_each_tuple_helperISt5tupleIJiiiPKcS2_ddEEZ4mainEUlRKT_E2_Lm3ELm6EEclERKS3_OS7_
+0000000000003a66 t _ZNK29classic_for_each_tuple_helperISt5tupleIJiiiPKcS2_ddEEZ4mainEUlRKT_E2_Lm4ELm6EEclERKS3_OS7_
+0000000000003b94 t _ZNK29classic_for_each_tuple_helperISt5tupleIJiiiPKcS2_ddEEZ4mainEUlRKT_E2_Lm5ELm6EEclERKS3_OS7_
+0000000000003c0e t _ZNK29classic_for_each_tuple_helperISt5tupleIJiiiPKcS2_ddEEZ4mainEUlRKT_E2_Lm6ELm6EEclERKS3_OS7_
 ```
 
 我们的tuple有6个元素，所以我们生成了6个helper的实例。过多的模板实例会导致代码膨胀。
 
 模板递归的另一个缺点是递归的最大深度有限制，在g++10.2上这个限制是900，也就是说超过900个元素的tuple我们是无法处理的，除非用编译器的命令行选项更改这一限制。不过通常也没人会写出有900多个元素的tuple。
 
-虽然有些缺点，还需要工具类模板来实现遍历，但这是旧时代的c++唯一的选择。
+还有一个需要考虑的情况，当我们传递了一个空的tuple进去会发生什么呢？
+
+```c++
+classic_for_each_tuple(std::tuple<>{}, 
+                        [](const auto &element) { /* work */ });
+```
+
+我们会得到一个编译错误，而我们所期望的是foreach什么也不做。问题发生在`std::tuple_size_v<Tuple> - 1`，当tuple为空时size为0，而对无符号数的0减去1会导致回环，从而导致get使用的索引的范围十分巨大，超过了模板递归深度限制；而更致命的是get一个无效的索引（tuple为空，任何索引都无效）是被`static_assert`断言的编译期错误，并且往往会产生一大长串错误信息导致debug困难。
+
+不过别担心，这是个小问题，解决起来也不麻烦，还记得我们的模板元编程技巧吗？用重载或特化表示边界条件：
+
+```c++
+template <typename Functor>
+constexpr void classic_for_each_tuple(const std::tuple<> &, Functor &&)
+{
+    // 什么也不做
+}
+```
+
+如此一来空的tuple也不会导致问题了。
+
+虽然有些缺点，还需要工具类模板来实现遍历，但这是旧时代的c++实现`for element in t`的唯一选择。
 
 ### 使用编译期条件分支
 
-好消息是我们可以用c++17了，c++17提供了编译期间计算的条件分支。一般形式如下：
+好消息是现在是现代c++的天下了，我们可以简化一下代码。
+
+比如使用c++17提供的编译期间计算的条件分支。一般形式如下：
 
 ```c++
 if constexpr (编译期常量表达式) {
@@ -214,9 +250,9 @@ if constexpr (编译期常量表达式) {
 }
 ```
 
-`if constexpr`最大的威力在于如果条件表达式为真，那么else里的语句根本不会被编译，反之亦然。
+`constexpr if`最大的威力在于如果条件表达式为真，那么else里的语句根本不会被编译，反之亦然。当然这得是在模板里，否则else分支的代码仍然会被编译器检查代码的语法正确性。
 
-没错，我们在最开始遇到的问题就是if和else里的语句都会被编译，导致了模板的无限递归，现在我们可以用`if constexpr`解决问题了：
+没错，我们在最开始遇到的问题就是if和else里的语句都会被编译，导致了模板的无限递归，现在我们可以用`constexpr if`解决问题了：
 
 ```c++
 template <typename Tuple, typename Functor, int Index>
@@ -239,11 +275,13 @@ constexpr void for_each_tuple(Tuple &&t, Functor &&f)
 
 这次当遍历完最后一个元素后函数会触发退出递归的条件，if constexpr会帮我们终止模板的递归。问题被干净利落地解决了。
 
+对于空tuple这个方案是如何处理的呢？答案是tuple为空的时候直接达到了impl的退出条件，所以是安全的noop。
+
 虽然代码被进一步简化了，但是模板递归的两大问题依旧存在。
 
 ### 变长模板参数——错误的解法
 
-现代c++有许多简化模板元编程的利器。如果说前面的`if constexpr`是编译期计算和模板不沾边，那下面要介绍的变长模板参数可就是如假包换的模板技巧了。
+现代c++有许多简化模板元编程的利器。如果说前面的`constexpr if`是编译期计算和模板不沾边，那下面要介绍的变长模板参数可就是如假包换的模板技巧了。
 
 顾名思义，变长模板参数可以让我们在模板参数上指定任意数量的类型/非类型参数：
 
@@ -251,6 +289,8 @@ constexpr void for_each_tuple(Tuple &&t, Functor &&f)
 template <typename... Ts>
 class tuple;
 ```
+
+上面的就是c++11中新增的tuple的定义，通过变长模板参数使得tuple支持了任意多的类型不同的元素。
 
 想要处理变长模板参数，在c++17之前还是得靠模板递归。所以我们是不是可以用变长模板参数获取tuple里每一个元素的类型呢？正好get也可以根据元素的类型来获取相应的数据。
 
@@ -299,15 +339,15 @@ Ts的第一个参数会被逐个分离，最后一直到Ts和First都为空，�
 
 你猜对了，get的文档里是这么说的`Fails to compile unless the tuple has exactly one element of that type.`，意思是当某个类型A出现了不止一次时，使用`get<A>`会导致编译出错。
 
-因此这个方案是无效的，我们不能保证tuple里总是不同类型的数据。
+因此这个方案是有重大缺陷的，我们不能保证tuple里总是不同类型的数据。因此这条路走到死胡同里了。
 
 ### 折叠表达式——使用变长模板参数的正确解法
 
-不过别气馁，尝试失败也是模板元编程的乐趣之一。更何况现代c++里有相当多的实用工具可以加以利用，比如`integer_sequence`和折叠表达式。
+别气馁，尝试失败也是模板元编程的乐趣之一。更何况现代c++里有相当多的实用工具可以加以利用，比如`integer_sequence`和折叠表达式。
 
 折叠表达式用于按照给定的模式展开变长模板参数包，而`integer_sequence`则可以用来包含0-N的整数类型非类型模板参数，在我上一篇介绍[模板元编程的文章](https://www.cnblogs.com/apocelipes/p/11289840.html)里有介绍，这里不再赘述。
 
-使用`integer_sequence`可以构建一个包含所有tuple元素索引的编译期整数常量序列，配合折叠表达式可以把这些索引展开利用：
+使用`integer_sequence`可以构建一个包含所有tuple元素索引的编译期整数常量序列，配合折叠表达式可以把这些索引展开利用，这样正好可以让get用上每一个索引：
 
 ```c++
 template <typename Tuple, typename Functor, std::size_t... Is>
@@ -325,7 +365,13 @@ constexpr void for_each_tuple3(const Tuple &t, Functor &&f)
 }
 ```
 
-这次不再是模板递归了，我们生成了所有元素的索引，然后教编译器硬编码了所有的get操作，形式上不太像但确确实实完成了遍历操作。这简单粗暴，同时也是三种方法中最直观的。
+这次不再是模板递归了，我们生成了所有元素的索引，然后教编译器硬编码了所有的get操作，形式上不太像但确确实实完成了遍历操作。
+
+当然老问题是少不了要问的，tuple为空的时候这个方案能正常工作吗？
+
+答案是肯定的，标准规定了`std::make_index_sequence<0>`会生成一个空的序列，而逗号运算符的一元折叠表达式对于空的参数包会安全地返回void，所以在传入一个空tuple时我们的函数是noop的。
+
+这种方案简单粗暴，同时也是三种方法中最直观的。
 
 而且这个方案不会产生一大堆的模板实例，生成的二进制文件也是清爽干净的。同时因为不是递归，也不会受到递归深度限制的影响。
 
