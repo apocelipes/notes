@@ -152,7 +152,7 @@ func main() {
 
 func main() {
 -   myTime := MyTime(time.Now()) // 假设获得的时间是 2022年7月20日20：30：00，时区UTC+8
-+   myTime := MyTime{time.Now}
++   myTime := MyTime{time.Now()}
     res, err := myTime.MarsharlJSON()
     if err != nil {
             panic(err)
