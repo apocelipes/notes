@@ -61,7 +61,7 @@ builder.String() // "Hello World"
 go test -bench=. -benchmem
 ```
 
-![benchmark](../../images/go-add-string/bench.png)
+![benchmark](../../images/golang/go-concat-string/bench.png)
 
 下面是测试代码
 

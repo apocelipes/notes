@@ -1,5 +1,7 @@
 在golang中我们可以轻松地通过`==`来判断两个数组（array）是否相等，但遗憾的是slice并没有相关的运算符，当需要判断两个slice是否相等时我们只能另寻捷径了。
 
+**从2023年开始你应该使用`golang.org/x/exp/slices.Equal`或者golang1.21的标准库函数`slices.Equal`来判断切片是否相等。**
+
 ## slice相等的定义
 
 我们选择最常见的需求，也就是当两个slice的类型和长度相同，且相等下标的值也是相等的，比如：
@@ -39,7 +41,7 @@ func main() {
 
 运行结果如下：
 
-![bytes](../../images/golang-slice-equal/bytes-slices.jpg)
+![bytes](../../images/golang/golang-slice-equal/bytes-slices.jpg)
 
 ## 使用reflect判断slice是否相等
 
@@ -74,7 +76,7 @@ func main() {
 }
 ```
 
-![reflect](../../images/golang-slice-equal/reflect.jpg)
+![reflect](../../images/golang/golang-slice-equal/reflect.jpg)
 
 ## 手写判断
 
@@ -119,7 +121,7 @@ func main() {
 
 运行结果：
 
-![testEq](../../images/golang-slice-equal/testeq.jpg)
+![testEq](../../images/golang/golang-slice-equal/testeq.jpg)
 
 下面我们对后两种方案做个简单的性能测试，我们测试两个不相等但很相似的拥有20个元素的slice，这是在日常开发中较常见的情景：
 
@@ -145,7 +147,7 @@ func BenchmarkDeepEqual(b *testing.B) {
 
 当然这个测试只能反应出有限的信息，正常情况下应该给出更全面的测试用例。不过在我们的演示中反射仍然付出了惊人的性能代价：
 
-![benchmark](../../images/golang-slice-equal/benchmark.jpg)
+![benchmark](../../images/golang/golang-slice-equal/benchmark.jpg)
 
 如果我们把slice的长度设为1000，那么差距就会更加明显：
 
@@ -179,7 +181,7 @@ func BenchmarkDeepEqual2(b *testing.B) {
 }
 ```
 
-![benchmark 1000 slice elements](../../images/golang-slice-equal/benchmark2.jpg)
+![benchmark 1000 slice elements](../../images/golang/golang-slice-equal/benchmark2.jpg)
 
 自己手写判断的性能更好，但是有个显而易见的弊端，当我们有多种类型的slice时我们就不得不编写不同版本的`testEq`，而它们唯一的不同仅仅只有slice的类型。
 

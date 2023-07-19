@@ -1,8 +1,8 @@
 这里是golang拾遗系列的第三篇，前两篇可以点击此处链接跳转：
 
-[golang拾遗：为什么我们需要泛型](https://www.cnblogs.com/apocelipes/p/13832224.html)
+[golang拾遗：为什么我们需要泛型](./golang拾遗：为什么我们需要泛型.md)
 
-[golang拾遗：指针和接口](https://www.cnblogs.com/apocelipes/p/13796041.html)
+[golang拾遗：指针和接口](./golang拾遗：指针和接口.md)
 
 今天我们要讨论的是golang中的嵌入类型（embedding types），有时候也被叫做嵌入式字段（embedding fields）。
 
@@ -420,7 +420,7 @@ func main() {
 
 总结起来和变量那里的差不多，都是车轱辘话，所以我总结了一张图：
 
-![method sets](../../images/golang-method-sets/receiver.jpg)
+![method sets](../../images/golang/golang-method-sets/receiver.jpg)
 
 注意红色标出的部分。这是你会在嵌入类型中遇到的第一个坑，所以在选择使用值类型嵌入还是指针类型嵌入的时候需要小心谨慎。
 

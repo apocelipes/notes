@@ -59,7 +59,7 @@ go get -u github.com/gobuffalo/packr/v2/packr2 # 安装资源打包工具
 
 然后我们复制一个png图片和一个录屏软件制造的巨型gif文件进images文件夹，整个项目看起来如下：
 
-![pk dir](../../images/golang-embed/pk_tree.png)
+![pk dir](../../images/golang/golang-embed/pk_tree.png)
 
 然后是我们的代码：
 
@@ -85,7 +85,7 @@ func main() {
 
 想要完成资源嵌入，我们需要运行`packr2`命令，之后直接运行`go build`即可，顺利运行后项目会是这样：
 
-![after packr2](../../imahes/../images/golang-embed/after_packr2.png)
+![after packr2](../../images/golang/golang-embed/after_packr2.png)
 
 packr的思路就是将资源文件编码成合法的golang源文件，然后利用golang把这些代码化的资源编译进程序里。这是比较主流的嵌入资源实现方案。
 

@@ -71,6 +71,6 @@ int main()
 
 我们编译写好的程序，然后运行：
 
-![run-shuffle](../../images/c++shuffle/shuffle.png)
+![run-shuffle](../../images/algorithm/shuffle/shuffle.png)
 
 可以看到元素都已经被随机排序了。

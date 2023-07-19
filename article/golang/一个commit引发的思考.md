@@ -17,7 +17,7 @@ commit的标题是“sync: document implementation of Once.Do”，显然是对�
 
 commit添加的内容如下：
 
-![commit content](../../images/golang-commits/content.jpg)
+![commit content](../../images/golang/golang-commits/content.jpg)
 
 乍一看可能平平无奇，然而仔细思考过后，我们就会发现问题了。
 

@@ -507,11 +507,11 @@ func BenchmarkIndexOfByReflectUint(b *testing.B) {
 }
 ```
 
-![性能测试](../../images/golang-why-generic/porf.png)
+![性能测试](../../images/golang/golang-why-generic/porf.png)
 
 我们吃惊地发现，直接使用interface比原生类型慢了10倍，如果使用反射并接收原生将会慢整整100倍！
 
-另一个使用接口的例子是比较slice是否相等，我们没有办法直接进行比较，需要借助辅助手段，在我以前的[这篇博客](https://www.cnblogs.com/apocelipes/p/11116725.html)有详细的讲解。性能问题同样很显眼。
+另一个使用接口的例子是比较slice是否相等，我们没有办法直接进行比较，需要借助辅助手段，在我以前的[这篇博客](./判断两个slice是否相等.md)有详细的讲解。性能问题同样很显眼。
 
 ### 复合类型的迷思
 
@@ -528,7 +528,7 @@ work(ss)
 
 为了解决这个问题，golang的sort包给出了一个颇为曲折的方案：
 
-![sort](../../images/golang-why-generic/sort.png)
+![sort](../../images/golang/golang-why-generic/stdlib_sort.png)
 
 sort为了能处理slice，不得不包装了常见的基本类型的slice，为了兼容自定义类型包里提供了`Interface`，需要你自己对自定义类型的slice进行包装。
 
