@@ -24,7 +24,7 @@
 
 文字描述可能比较抽象，所以我们先给出预想的效果图：
 
-![sample](../../images/color-delegate/sample.png)
+![sample](../../images/Qt/color-delegate/sample.png)
 
 现在让我们想办法实现图中的效果。
 
@@ -158,7 +158,7 @@ int main(int argc, char **argv) {
 
 运行之后你就会看到如下图的界面：
 
-![running](../../images/color-delegate/testrun.png)
+![running](../../images/Qt/color-delegate/testrun.png)
 
 虽然文字较短时某些位于边缘的颜色有些难以辨认，但整体的彩虹色渐变效果是很明显的。这样我们就实现了文字的彩虹渐变效果。
 

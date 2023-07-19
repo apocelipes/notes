@@ -1,4 +1,4 @@
-在[上一篇文章](https://www.cnblogs.com/apocelipes/p/10899484.html)中我们介绍了使用vs2019作为远程Linux系统的开发环境，但我们是创建的传统的sln项目，而对于Linux开发者来说以autotools或是cmake进行项目结构的组织更为简单直观，也符合在Linux环境上的习惯。
+在[上一篇文章](./使用vs2019进行linux远程开发.md)中我们介绍了使用vs2019作为远程Linux系统的开发环境，但我们是创建的传统的sln项目，而对于Linux开发者来说以autotools或是cmake进行项目结构的组织更为简单直观，也符合在Linux环境上的习惯。
 
 autotools是较为古老的也是使用最为广泛的构建系统，你在Linux上总是避免不了类似`./configure && make`这样的命令，背后就是autotools为你完成了检测系统环境到生成makefile的一系列工作。
 
@@ -12,11 +12,11 @@ cmake是较新的一种工具，autotools虽然功能强大使用广泛，但是
 
 创建很简单，在vs的启动窗口中选择“创建新项目”，然后找到“CMkae项目”，选择后点击下一步即可，和创建传统项目的过程完全一样，如图：
 
-![create cmake project](../../images/vs-linux/create_cmake_project.jpg)
+![create cmake project](../../images/linux/visual-studio-linux/create_cmake_project.jpg)
 
 创建完成后你的项目里会是如下的场景（假如项目名称叫CMakeProject1）：
 
-![cmake project overview](../../images/vs-linux/cmake_project_overview.jpg)
+![cmake project overview](../../images/linux/visual-studio-linux/cmake_project_overview.jpg)
 
 也许你会奇怪，为什么cmake项目不像sln项目那样区分出Linux和Windows平台呢？答案是我们可以通过对项目进行设置来切换本地环境和远程环境！
 
@@ -26,15 +26,15 @@ cmake是较新的一种工具，autotools虽然功能强大使用广泛，但是
 
 ## 设置远程环境
 
-设置远程环境之前，你需要先在顶部的工具菜单的选项对话框中将远程连接设置好，并同步远程环境的头文件，具体过程可以参考[这篇](https://www.cnblogs.com/apocelipes/p/10899484.html)，过程一样就不赘述了。
+设置远程环境之前，你需要先在顶部的工具菜单的选项对话框中将远程连接设置好，并同步远程环境的头文件，具体过程可以参考[这篇](./使用vs2019进行linux远程开发.md#配置远程项目)，过程一样就不赘述了。
 
 在初始的项目中启动项要么是某个文件要么是空的，没有我们的远程环境，所以我们需要右键资源管理器中显示的CMakeLists.txt文件：
 
-![settings](../../images/vs-linux/cmake_settings.gif)
+![settings](../../images/linux/visual-studio-linux/cmake_settings.gif)
 
 找到“project-name的CMake设置”，project-name是你的项目名称，点击。这时会生成一个“CMakeSettings.json”的文件，这是整个项目的配置文件，双击打开会显示图形化的配置界面：
 
-![setting interface](../../images/vs-linux/settings.jpg)
+![setting interface](../../images/linux/visual-studio-linux/settings.jpg)
 
 首先我们看到了配置名称，这是给你的自定义配置起名字的地方，右边的绿色加号表示添加新的配置，因为我们只想使用Linux远程环境，所以我们直接修改了默认的配置项。
 
@@ -50,17 +50,17 @@ cmake是较新的一种工具，autotools虽然功能强大使用广泛，但是
 
 vs2019中一个强大的功能就是可以把cmake中由系统或是模块产生的变量的值显示出来（需要在cache成功刷新之后，也就是cmakelists文件保存后或手动在项目菜单中单击为项目生成缓存）：
 
-![variables](../../images/vs-linux/show_cmake_variables.jpg)
+![variables](../../images/linux/visual-studio-linux/show_cmake_variables.jpg)
 
 接着我们点击显示高级选项，因为想要vs能提供代码补全还需要一点设置：
 
-![more settings](../../images/vs-linux/cmake_pro_settings.jpg)
+![more settings](../../images/linux/visual-studio-linux/cmake_pro_settings.jpg)
 
 在这里你可以设置cmake生成什么类型的makefile，cmake的运行目录和编译完成后程序的安装目录，以及cmake本身所在的路径（如果你把cmake安装到了不太常规的地方例如/opt）。
 
 其中重点关注IntellSense选项，这是选择代码补全的引擎：
 
-![intellSense models](../../images/vs-linux/intellsense.jpg)
+![intellSense models](../../images/linux/visual-studio-linux/intellsense.jpg)
 
 可以看到所有选项都是由`平台名称-编译器名称-32位/64位`这种格式组成的，默认值是空，我们想要代码补全可用就要选择和远程环境完全对应的那种模式。
 
@@ -83,7 +83,7 @@ vs2019中一个强大的功能就是可以把cmake中由系统或是模块产生
 
 下面来看看CMakeLists.txt是如何编写的：
 
-```CMakeLists.txt
+```cmake
 project(LinuxQtExample)
 
 # 设置c++语言标准，我使用c++17
@@ -111,7 +111,7 @@ add_executable (LinuxQt "main.cpp")
 target_link_libraries(LinuxQt Qt5::Core Qt5::Widgets Qt5::Gui Qt5::Charts)
 ```
 
-更多如何用cmake构建Qt程序的内容请移步[这里](https://www.cnblogs.com/apocelipes/p/10353698.html)。
+更多如何用cmake构建Qt程序的内容请移步[这里](../Qt/配置CLion作为Qt5开发环境.md)。
 
 ## 编写测试代码
 
@@ -243,19 +243,19 @@ int main(int argc, char* argv[])
 }
 ```
 
-代码中使用了utf8编码的中文字符串，你需要设置源文件的编码为utf8以免在Linux上运行时出现乱码。具体见[这里](https://www.cnblogs.com/apocelipes/p/10899484.html#%E4%B8%AD%E6%96%87%E4%B9%B1%E7%A0%81)。
+代码中使用了utf8编码的中文字符串，你需要设置源文件的编码为utf8以免在Linux上运行时出现乱码。具体见[这里](./使用vs2019进行linux远程开发.md#中文乱码)。
 
 ## 运行测试
 
 如之前所说，我们不能直接点击运行按钮，所以对于gui程序我们只能选择顶部工具栏的生成->全部生成，这样vs会自动调用cmake和make来完成程序的构建：
 
-![compile](../../images/vs-linux/cmake_compile.jpg)
+![compile](../../images/linux/visual-studio-linux/cmake_compile.jpg)
 
 可以看到vs将整个项目用rsync同步到了远程机上，接着运行了cmake和make。
 
 生成成功后我们到之前设置的“远程生成根”下`out/build/...`，省略号表示的是你的cmake项目配置的名字，编译好的程序就在这里，下面在远程环境中运行：
 
-![running](../../images/vs-linux/cmake_project_run.gif)
+![running](../../images/linux/visual-studio-linux/cmake_project_run.gif)
 
 ## 总结
 

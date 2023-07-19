@@ -1,6 +1,6 @@
 安装好Arch Linux或Manjaro Linux系统后默认没办法正常显示emoji，通常会变成方框或者带有unicode码的方块：
 
-![incorrect-emoji](../../images/archlinux-show-emoji/cannot-show-emoji.png)
+![incorrect-emoji](../../images/linux/archlinux-show-emoji/cannot-show-emoji.png)
 
 这是因为缺失字体以及相关的字体配置导致的。
 
@@ -71,7 +71,7 @@ fc-cache
 
 现在可以正常显示emoji了：
 
-![show-emojis](../../images/archlinux-show-emoji/emojis.png)
+![show-emojis](../../images/linux/archlinux-show-emoji/emojis.png)
 
 ##### 参考
 

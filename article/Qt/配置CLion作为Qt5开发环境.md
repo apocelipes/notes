@@ -10,7 +10,7 @@ CLion的安装和激活超出了本文的讨论范围，我们假设你已经安
 
 CLion默认使用GCC进行工程构建，然而使用GCC是无法使用代码补全功能的，所以我们将toolchains替换成clang：
 
-![toolchains](../../images/clion-settings-qt5/toolchains.png)
+![toolchains](../../images/Qt/clion-settings-qt5/toolchains.png)
 
 注意，CLion自带了一个cmake，如果我们想使用系统提供的一些cmake模块，那么就必须如图所示替换为系统的cmake。
 
@@ -20,11 +20,11 @@ CLion默认使用GCC进行工程构建，然而使用GCC是无法使用代码补
 
 下面是创建Qt5项目，CLion没有区分普通c++项目和Qt项目（毕竟Qt项目一般也是c++项目或者c++/QML项目），所以这样创建即可：
 
-![create project](../../images/clion-settings-qt5/create-project.png)
+![create project](../../images/Qt/clion-settings-qt5/create-project.png)
 
 创建完成后项目结构如图所示：
 
-![project](../../images/clion-settings-qt5/proj.png)
+![project](../../images/Qt/clion-settings-qt5/proj.png)
 
 `cmake-build-release`目录是生成moc等工具的中间代码以及可执行文件的地方，当然可执行文件的生成路径可以自己指定，这是CLion默认的选项。
 
@@ -36,7 +36,7 @@ CLion默认使用GCC进行工程构建，然而使用GCC是无法使用代码补
 
 所以我们需要把`CMakeLists.txt`修改成如下的样子：
 
-```CMakeLists
+```cmake
 cmake_minimum_required(VERSION 3.0)
 project(test)
 
@@ -77,7 +77,7 @@ target_link_libraries(test Qt5::Widgets)
 
 修改之后点击图中的`Reload changes`：
 
-![reload changes](../../images/clion-settings-qt5/reloadchanges.png)
+![reload changes](../../images/Qt/clion-settings-qt5/reloadchanges.png)
 
 CLion会自动生成新的Makefile用于编译项目，现在代码补全也可以使用了。
 
@@ -126,14 +126,14 @@ int main(int argc, char *argv[])
 
 然后我们点击`int main(...)`左侧的运行按钮：
 
-![click run button](../../images/clion-settings-qt5/button.png)
+![click run button](../../images/Qt/clion-settings-qt5/button.png)
 
 程序就开始编译了：
 
-![building](../../images/clion-settings-qt5/building.png)
+![building](../../images/Qt/clion-settings-qt5/building.png)
 
 如果编译成功程序就会自动运行：
 
-![running](../../images/clion-settings-qt5/run.png)
+![running](../../images/Qt/clion-settings-qt5/run.png)
 
 至此CLion已经可以正常配合Qt进行开发。

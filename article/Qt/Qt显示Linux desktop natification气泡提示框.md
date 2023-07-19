@@ -1,6 +1,6 @@
 在现代Linux桌面环境上我们时常可以看到类似的消息框：
 
-![notify example](../../images/linux-notification/notify1.jpg)
+![notify example](../../images/Qt/linux-notification/notify1.jpg)
 
 这些消息框常用在如下场景：
 
@@ -72,7 +72,7 @@ notify-send test 'This is a desktop Notification test.' -t 10000
 
 `-t`参数设置超时时间。效果如下：
 
-![notify-send](../../images/linux-notification/notify2.png)
+![notify-send](../../images/Qt/linux-notification/notify2.png)
 
 具体的参数可以参考这里：[https://ss64.com/bash/notify-send.html](https://ss64.com/bash/notify-send.html)
 
@@ -97,7 +97,7 @@ func main() {
 
 上面的代码将会显示一个可以在桌面停留5s的气泡框：
 
-![go-notify](../../images/linux-notification/notify3.png)
+![go-notify](../../images/Qt/linux-notification/notify3.png)
 
 不过如果每次都要使用一大串代码才能显示消息的话必然是低效的，而且需要换算时间至毫秒，所以我写了一个帮助函数在[notify.go](https://github.com/apocelipes/schannel-qt5/blob/master/widgets/notify.go):
 
@@ -149,7 +149,7 @@ func duration2millisecond(duration time.Duration) int32 {
 ShowNotification("下载", "文件下载完成", "dialog-information", 5*time.Second)
 ```
 
-![notify](../../images/linux-notification/notify4.png)
+![notify](../../images/Qt/linux-notification/notify4.png)
 
 这样我们也可以轻松地在我们的Qt程序中使用气泡消息框了。
 

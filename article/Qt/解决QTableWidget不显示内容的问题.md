@@ -38,7 +38,7 @@ func main() {
 
 这是它的效果：
 
-![not_display](../../images/qt-table-not-display-data/not-display-data.png)
+![not_display](../../images/Qt/qt-table-not-display-data/not-display-data.png)
 
 没错，表头正常显示了，然而数据却不见了！
 
@@ -79,7 +79,7 @@ func main() {
 
 修复后的显示效果：
 
-![fixed](../../images/qt-table-not-display-data/fixed-display.png)
+![fixed](../../images/Qt/qt-table-not-display-data/fixed-display.png)
 
 其实问题很简单，看代码的第六行，我们设置了行数。
 

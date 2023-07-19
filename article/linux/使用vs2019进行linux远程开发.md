@@ -57,13 +57,13 @@ vs进行远程开发分为两步：
 
 安装好c++ for Linux功能后我们会在创建新项目的面板中看到Linux的选项，如图：
 
-![create_sln_repo](../../images/vs-linux/create_sln_repo.jpg)
+![create_sln_repo](../../images/linux/visual-studio-linux/create_sln_repo.jpg)
 
 这里我们选择了使用传统的vs项目解决方案构建的空白控制台程序，后续的文章中你还可以看到如何创建cmake项目，这里暂且不提。
 
 下面没什么要说的，选择项目的存储位置，注意是本地的位置，远程机器的位置在后面会进行配置：
 
-![config project](../../images/vs-linux/config_sln_project.jpg)
+![config project](../../images/linux/visual-studio-linux/config_sln_project.jpg)
 
 点击创建，我们的远程开发项目就创建成功了。
 
@@ -71,23 +71,23 @@ vs进行远程开发分为两步：
 
 vs不能编辑空项目的配置，所以我们先在项目中创建一个`main.cpp`，然后点击顶部菜单：项目->属性，你就能看到项目的配置界面了：
 
-![settings](../../images/vs-linux/project_settings.jpg)
+![settings](../../images/linux/visual-studio-linux/project_settings.jpg)
 
 远程计算机是在调试中的远程连接管理器中添加的。这里一般不需要改动，除非你需要改变项目的类型或编译结果的存放位置。如果有多个远程环境时，也可以在这里进行选择。
 
 调试部分提供了`gdb`和`gdbserver`，前者是让vs在Linux上启动一个console，然后在其中运行gdb并返回输出，如果你的Linux上的终端配置了彩色输出，那么和遗憾vs并不认识他们，会显示成原始的字符串；使用gdbserver时会在远程启用gdbserver，本地vs解析回传的数据不会出现杂音。这里我们选择了gdbserver，如果你发现无法打断点，那么参考微软的建议，换回gdb方案：
 
-![set debuger](../../images/vs-linux/project_debug.jpg)
+![set debuger](../../images/linux/visual-studio-linux/project_debug.jpg)
 
 接着是配置的重点，首先是配置需要同步的远程环境的头文件，有了这些文件vs才能对你的代码进行自动补全和提示：
 
-![set project headers](../../images/vs-linux/project_headers.jpg)
+![set project headers](../../images/linux/visual-studio-linux/project_headers.jpg)
 
 默认复制的路径通常已经包含了Linux上大部分的头文件，通常我们也不需要做更改。头文件的同步发生在第一次构建项目成功后或添加远程连接后手动同步。
 
 接着是c/c++编译器的选择，也就是对gcc和g++编译参数的配置，讲解这些参数超出了我们的讨论范围，我们这里只需要选择合适的c++标准版本：
 
-![c++ version](../../images/vs-linxu/project_version)
+![c++ version](../../images/linux/visual-studio-linux/project_version.jpg)
 
 这里我们选择了c++17。其他设置与在Windows上进行开发时一样，vs可以自动转换成g++的参数，这里就不再赘述。
 
@@ -97,15 +97,15 @@ vs不能编辑空项目的配置，所以我们先在项目中创建一个`main.
 
 在第一次编译或调试你的项目时vs会自动让你连接远程环境，当然，我们推荐在调试->选项->跨平台->连接管理器中进行设置：
 
-![add_remote_env](../../images/vs-linux/add_remote.jpg)
+![add_remote_env](../../images/linux/visual-studio-linux/add_remote.jpg)
 
 填入你的远程ip/域名，端口ssh默认为22，安全起见你需要修改成其他端口，这里方便演示使用了默认配置，密码同上，你应该考虑使用更安全的ssh私钥登录。
 
-![remotes](../../images/vs-linux/remotes.jpg)
+![remotes](../../images/linux/visual-studio-linux/remotes.jpg)
 
 登录成功后这个连接就添加完成了，我们看到管理器下面还有一个远程标头管理器的设置项，这就是用来同步头文件的：
 
-![remote_headers](../../images/vs-linux/remote_headers.jpg)
+![remote_headers](../../images/linux/visual-studio-linux/remote_headers.jpg)
 
 点击更新按钮就会开始同步头文件，这些文件会被缓存在本地，因为要从远程一次性复制大量文件，所以可能会花费较长的时间。
 
@@ -115,15 +115,15 @@ vs不能编辑空项目的配置，所以我们先在项目中创建一个`main.
 
 至此你已经可以在vs中编写面向Linux平台的代码了，自动补全可以正常工作：
 
-![autocomplete1](../../images/vs-linux/autocomplete.jpg)
+![autocomplete1](../../images/linux/visual-studio-linux/autocomplete.jpg)
 
-![autocomplete2](../../images/vs-linux/autocomplete2.jpg)
+![autocomplete2](../../images/linux/visual-studio-linux/autocomplete2.jpg)
 
 可以看到Linux中的头文件和结构体都已经可以识别了。如果你发现无法自动补全（通常发生在刚添加远程连接或是项目设置发生了变化后），先试试关闭vs重新打开，如果没用请尝试刷新intellisense或重新同步头文件。
 
 在编辑结束后我们就能点击调试按钮运行我们的程序了：
 
-![run](../../images/run.jpg)
+![run](../../images/linux/visual-studio-linux/run.jpg)
 
 注意，构建的体系架构必须是和远程环境一致的，比如远程环境是x64，这里可以选择x64或x86，但是不能选择arm，否则会报错。
 
@@ -148,7 +148,7 @@ int main()
 
 点击调试->Linux 控制台，会显示一个可以交互的console，你可以在其中输入内容或是看到程序的输出：
 
-![output](../../images/vs-linux/output.jpg)
+![output](../../images/linux/visual-studio-linux/output.jpg)
 
 程序运行成功。
 
@@ -189,27 +189,27 @@ int main()
 
 对于上面的测试程序，我们添加了一点中文输出信息，现在打开控制台进行调试：
 
-![result_encode_error](../../images/vs-linux/running_encode_err.jpg)
+![result_encode_error](../../images/linux/visual-studio-linux/running_encode_err.jpg)
 
 可以看到中文输出变成了乱码，我们输入一些信息进去，这是运行结果：
 
-![encode_error](../../images/vs-linux/encode_err.jpg)
+![encode_error](../../images/linux/visual-studio-linux/encode_err.jpg)
 
 可以看到，程序内写入的中文发生了乱码，而我们的输入没有。原因很简单，输入时实在linux的控制台环境下，编码默认是utf8的，所以我们的输入被正确编码，而源文件中的内容是GB18030的，所以在Linux控制台（默认以utf8解码数据并显示）中会发生乱码。
 
 错误的原因知道了解决起来也就很简单了，把源文件的编码改成utf8就行，我们选择最简单的方法，在`高级保存选项`中修改编码（这个菜单选项默认被隐藏，网上有很多介绍如何显示它的方法的资料）：
 
-![set_encode](../../images/vs-linux/encode.jpg)
+![set_encode](../../images/linux/visual-studio-linux/encode.jpg)
 
 设置好后保存文件，现在文件的编码已经被改为了utf8了。
 
 现在运行修改后的程序：
 
-![encode_success](../../images/vs-linux/encode_success.jpg)
+![encode_success](../../images/linux/visual-studio-linux/encode_success.jpg)
 
 运行结果也是正常的：
 
-![encode_output](../../images/vs-linux/output_encode.jpg)
+![encode_output](../../images/linux/visual-studio-linux/output_encode.jpg)
 
 ### 使用数学函数和第三方库
 
@@ -229,7 +229,7 @@ int main()
 
 下面我们给例子加上一点boost chrono的功能测试，在Linux上需要指定`-lboost_chrono`，这是设置：
 
-![set-thirdparts](../../images/vs-linux/set_3rdlib.jpg)
+![set-thirdparts](../../images/linux/visual-studio-linux/set_3rdlib.jpg)
 
 下面是完整的代码：
 
@@ -261,4 +261,4 @@ int main()
 
 点击运行按钮，程序就能正常调试了，否则会报错：
 
-![run-test](../../images/vs-linux/test.jpg)
+![run-test](../../images/linux/visual-studio-linux/test.jpg)

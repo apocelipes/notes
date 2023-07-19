@@ -12,7 +12,7 @@
 
 我们在显示一些模态对话框的时候，往往需要将对话框的背景颜色调暗以达到突出当前对话框的效果，例如：
 
-![突出对话框](../../images/mask-widget/mask1.png)
+![突出对话框](../../images/Qt/mask-widget/mask1.png)
 
 对话框的父窗口除了标题栏以外的部分都变暗了，在父窗口的对比下对话框的显示效果就得到了强调。
 
@@ -120,6 +120,6 @@ if __name__ == '__main__':
 
 这样我们的遮罩控件就完成了，运行程序：
 
-![normal-dialog](../../images/mask-widget/mask2.png)
+![normal-dialog](../../images/Qt/mask-widget/mask2.png)
 
-![MaskWidget](../../images/mask-widget/mask1.png)
+![MaskWidget](../../images/Qt/mask-widget/mask1.png)

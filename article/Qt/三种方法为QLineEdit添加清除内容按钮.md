@@ -23,7 +23,7 @@ edit1->setClearButtonEnabled(true);
 
 效果：
 
-![plan1](../../images/clear-lineedit/plan1.png)
+![plan1](../../images/Qt/clearable-lineedit/plan1.png)
 
 看到右边那个图标，如果是Qt自带的话会是一个类似扫把的图形，如果使用了系统主题那么会有些许差异，点击它，输入内容就会全部清除。
 
@@ -51,7 +51,7 @@ QObject::connect(clearAction,
 
 这是效果，与方法1时几乎没什么区别：
 
-![plan2 default](../../images/clear-lineedit/plan2-default.png)
+![plan2 default](../../images/Qt/clearable-lineedit/plan2-default.png)
 
 不过方法二的威力不止于此，基于我们可以使用自己的QAction，那么就可以定制一些操作，比如使用我们自己的图标:
 
@@ -59,7 +59,7 @@ QObject::connect(clearAction,
 clearAction->setIcon(QIcon(":/clear.png"));
 ```
 
-![plan2 custom](../../images/clear-lineedit/plan2-custom.png)
+![plan2 custom](../../images/Qt/clearable-lineedit/plan2-custom.png)
 
 这种方法相比前一种略显复杂，然而却提供了更好的扩展性。
 
@@ -70,7 +70,7 @@ clearAction->setIcon(QIcon(":/clear.png"));
 
 想要在QLineEdit上添加一个widget一点也不复杂，首先我们要弄清以下几个原理：
 
-- qt的widget和layout是可以堆叠的，之前在[实现半透明遮罩](https://www.cnblogs.com/apocelipes/p/10268108.html)中有提过
+- qt的widget和layout是可以堆叠的，之前在[实现半透明遮罩](./Qt实现半透明遮罩效果.md)中有提过
 - 你可以为QLineEdit设置layout，如你所料layout会堆叠在edit的输入框上
 - edit的layout会只使用控件的最小尺寸，这样不会导致将整个输入框遮盖掉
 - edit的可输入区域是可以设置的，你可以合理的设置输入区的大小避免文字进入layout之下被遮盖
@@ -226,7 +226,7 @@ QObject::connect(edit3_2,
 
 效果如下：
 
-![plan3](../../images/clear-lineedit/plan3.png)
+![plan3](../../images/Qt/clearable-lineedit/plan3.png)
 
 这种方案是最复杂的，但也是最灵活的，我们可以定制button的外观，通过`buttonClicked`信号我们可以定制按钮按下后的行为。所以我在上一节才说这是扩展性最好的方法。
 
@@ -295,11 +295,11 @@ int main(int argc, char *argv[]) {
 
 当无输入内容时：
 
-![all no input](../../images/clear-lineedit/all-noinput.png)
+![all no input](../../images/Qt/clearable-lineedit/all-noinput.png)
 
 当有输入内容时：
 
-![all has input text](../../images/clear-lineedit/all-hasinput.png)
+![all has input text](../../images/Qt/clearable-lineedit/all-hasinput.png)
 
 这样三种方法都介绍完了，选用哪种需要自己决定。
 
