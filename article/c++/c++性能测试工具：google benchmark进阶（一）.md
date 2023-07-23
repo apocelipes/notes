@@ -44,7 +44,7 @@ void bench_vector_reserve(benchmark::State& state)
 }
 ```
 
-非常的简单，我们通过`length`控制插入的元素个数；`is_reserve`则负责控制是否预分配内存，通过`if constexpr`可以生成reserve和不进行任何操作的两种代码（如果不熟悉c++17的if constexpr，推荐花两分钟看看[这里](https://www.cnblogs.com/apocelipes/p/14536236.html#%E4%BD%BF%E7%94%A8%E7%BC%96%E8%AF%91%E6%9C%9F%E6%9D%A1%E4%BB%B6%E5%88%86%E6%94%AF)）。
+非常的简单，我们通过`length`控制插入的元素个数；`is_reserve`则负责控制是否预分配内存，通过`if constexpr`可以生成reserve和不进行任何操作的两种代码（如果不熟悉c++17的if constexpr，推荐花两分钟看看[这里](./模板元编程：遍历tuple.md#使用编译期条件分支)）。
 
 然后我们像往常一样定义一个测试用例：
 

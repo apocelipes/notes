@@ -320,9 +320,9 @@ Matrix<T>& Matrix<T>::operator=(Matrix2 &&rhs) noexcept
 
 然而还有最后一点疑问：我们知道copy and swap会多创建一个临时对象并多出一次交换操作，这对性能会带来多大的影响呢？
 
-我只能说会有一点影响，但这个“一点”到底是多少不跑测试我也口说无凭。所以我基于google benchmark写了个简单测试，如果还不了解benchmark怎么用，可以看看我写的[教程](https://www.cnblogs.com/apocelipes/p/10348925.html)。 
+我只能说会有一点影响，但这个“一点”到底是多少不跑测试我也口说无凭。所以我基于google benchmark写了个简单测试，如果还不了解benchmark怎么用，可以看看我写的[教程](./c++性能测试工具：google%20benchmark进阶（一）.md)。 
 
-全部的测试代码有200行，实在是太长了，所以我把它贴在了gist上，你可以在[这里](https://gist.github.com/apocelipes/2f51ac6749d0923d02f4bb752a78606)查看。
+全部的测试代码有200行，实在是太长了，所以我把它贴在了gist上，你可以在[这里](https://gist.github.com/apocelipes/2f51ac6749d0923d02f4bb752a786064)查看。
 
 下面是在我的机器上的测试结果：
 

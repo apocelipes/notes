@@ -34,7 +34,7 @@
 
 之前市面上已经有很多把今天文件嵌入golang二进制程序的工具了，这次golang官方将这一功能加入了`embed`标准库，从语言层面上提供了支持。
 
-我之前以及写了embed的使用教程，可以看[这里](https://www.cnblogs.com/apocelipes/p/13907858.html)。
+我之前以及写了embed的使用教程，可以看[这里](./golang1.16内嵌静态资源指南.md)。
 
 这儿还有一篇官方推荐的[教程](https://blog.carlmjohnson.net/post/2021/how-to-use-go-embed/)。
 
