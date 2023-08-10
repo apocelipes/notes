@@ -71,10 +71,11 @@ type Ordered interface {
 使用上也很简单：
 
 ```golang
-numbers := []int{7, 6, 5, 4, 3, 2, 1}
-maxIntValue := max(0, numbers...) // 7 type int
-minIntValue := min(8, numbers...) // 1 type int
+maxIntValue := max(0, 7, 6, 5, 4, 3, 2, 1) // 7 type int
+minIntValue := min(8, 7, 6, 5, 4, 3, 2, 1) // 1 type int
 ```
+
+目前max和min都不支持slice的解包操作：`max(1, numbers...)`。
 
 对于clear来说事情比min和max复杂。clear只接受slice和map，如果是对泛型的类型参数使用clear，那么类型参数的type set必须是map或者slice，否则编译报错。
 
@@ -95,7 +96,7 @@ func main() {
 }
 ```
 
-燃而对于slice，它的行为又不同了：会把slice里所有元素变回零值。看个例子：
+然而对于slice，它的行为又不同了：会把slice里所有元素变回零值。看个例子：
 
 ```golang
 func main() {
@@ -191,7 +192,7 @@ go 1.21.0
 
 这样做的好处是包的初始化顺序终于有明确的标准化的定义了，坏处有两点：
 
-1. 一起的程序如果依赖于特定的初始化顺序，那么在新版本会出问题
+1. 以前的程序如果依赖于特定的初始化顺序，那么在新版本会出问题
 2. 现在可以通过修改package的导入路径（主要能改的部分是包的名字）和控制导入的包来做到让A包始终在B包之前初始化，因此B包的初始化流程里可以对A包公开出来的接口或者数据进行修改，这样做耦合性很高也不安全，尤其是B包如果是某个包含恶意代码的包的话。
 
 我们能做的只有遵守最佳实践：不要依赖特定的包直接的初始化顺序；以及在使用某个第三方库前要仔细考量。
