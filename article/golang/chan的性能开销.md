@@ -58,7 +58,7 @@
 
 最后只剩下一个方案了，使用复制来传递数据。复制能在语法框架下使用，与共享相比也不容易引发问题（只是相对而言，chan的浅拷贝问题有时候反而是并发问题的温床）。这也是go遵循的CSP（Communicating Sequential Process）模型所提倡的。
 
-## 复制导致的开销
+## 复制数据导致的开销
 
 既然复制有正当理由且不可避免，那我们只能选择接受了。因此复制会带来多大开销变得至关重要。
 
@@ -323,7 +323,7 @@ Linux上的测试结果：
 
 使用指针传递时切记要充分考虑上面列出的缺点。
 
-### 使用lock-free数据结果替代chan
+### 使用lock-free数据结构替代chan
 
 chan大部分时间都被用作并发安全的队列，如果chan只有固定的一个发送者和固定一个的接收者，那么可以试试这种无锁数据结构：[SPSCQueue](https://www.boost.org/doc/libs/1_76_0/doc/html/boost/lockfree/spsc_queue.html)。
 
