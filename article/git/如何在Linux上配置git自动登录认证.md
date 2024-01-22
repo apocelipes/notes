@@ -10,6 +10,7 @@
 
 ```bash
 # Ubuntu
+# 如果使用 KDE 桌面环境，且 KDE Frameworks 版本在 5.97.0 及以上，则不需要gnome-keyring
 sudo apt-get install libsecret-1-0 libsecret-1-dev gnome-keyring
 
 # Arch Linux
@@ -103,6 +104,7 @@ git config --global credential.helper /path/to/your-tool
 
 ```bash
 cd /usr/share/doc/git/contrib/credential/libsecret
+# Arch Linux: cd /usr/share/git/credential/libsecret
 sudo make
 
 # 如果目录所在的文件系统是ext4，xfs，btrfs，还可以用下面的命令禁止对程序的任何修改
@@ -119,7 +121,11 @@ git config --global credential.helper libsecret
 或者你不想修改$PATH，可以这样配置：
 
 ```bash
+# Ubuntu
 git config --global credential.helper /usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret
+
+# Arch Linux
+git config --global credential.helper /usr/share/git/credential/libsecret/git-credential-libsecret
 ```
 
 这样就大功告成了。
