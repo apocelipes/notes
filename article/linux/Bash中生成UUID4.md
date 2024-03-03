@@ -19,3 +19,5 @@ Summary
 ```
 
 openssl最慢，proc和uuidgen速度差不多。
+
+如果有python3.12+：`python -m uuid`
