@@ -98,7 +98,7 @@ static_assert(std::is_same_v<Wrapper<>::wrappered, Wrapper<void>::wrappered>);
 for_each(map.begin(), map.end(), std::pred<std::pair<std::string, int64_t>>());
 ```
 
-上述代码的问题在于正确的参数类型应该是`std::pair<const std::string, int64_t>`，我们漏掉了const，这会导致pair整个被复制一遍，性能是无比底下的。要彻底避免这种错误，就得利用自动类型推导。
+上述代码的问题在于正确的参数类型应该是`std::pair<const std::string, int64_t>`，我们漏掉了const，这会导致pair整个被复制一遍，性能是无比低下的。要彻底避免这种错误，就得利用自动类型推导。
 
 然而前面说了，标准库提供的谓词基本全是类模板，类模板的模板参数要么依赖默认值要么得显示指定，怎么才能依赖自动推导呢。
 
