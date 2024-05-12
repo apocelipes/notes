@@ -62,7 +62,7 @@ func output(s S) {
 }
 
 func main() {
-    var a S = "a" 
+    var a = "a" // string
     output(a)
 }
 ```
@@ -272,7 +272,7 @@ doWithConfigType(NET_ERR_MESSAGE) // WTF???
 
 当然有，而且有不少，其中一个比较著名的是`stringer`: <https://pkg.go.dev/golang.org/x/tools/cmd/stringer>
 
-这个工具也只能解决一部分问题，但以及比什么都做不了要强太多了。
+这个工具也只能解决一部分问题，但至少比什么都做不了要强太多了。
 
 ## 总结
 
