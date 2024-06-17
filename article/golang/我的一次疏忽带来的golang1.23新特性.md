@@ -34,7 +34,7 @@ func my_func(...any) (n int, err error)
 ```golang
 import _ "unsafe" // 必须有这行才能用linkname
 
-//go:linkname main.fastHandle
+//go:linkname fastHandle main.fastHandle
 func fastHandle(input io.Writer) error {
     ...
 }
