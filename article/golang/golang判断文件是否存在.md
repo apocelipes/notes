@@ -36,12 +36,96 @@ func FileExist(path string) bool {
 
 这种实现的最大优势在于它简单而直观，但是它无法在Windows上使用。
 
-### 一点提示
+### 一些提示
 
-<span style="color:red;">当我们的`FileExist`返回true时，其实文件并不一定存在。</span>
+首先**当我们的`FileExist`返回true时，其实文件并不一定存在。**
 
 当我们对目标path中的某一部分没有可读权限时，`os.Lstat`和`syscall.Access`同样会返回error，不过这个error不会让`os.IsNotExist`返回true。
 
-当文件不存在而你对文件所在的目录或者它的上层目录没有访问权限时，`FileExist`依旧会返回true，bug就在这时发生了。
+当文件不存在而你对文件所在的目录或者它的上层目录没有访问权限时，`FileExist`依旧会返回true，bug就在这时发生了。所以重要的一点是**在判断文件是否存在前应该先判断自己对文件及其路径是否有访问权限**。
 
-所以重要的一点是<span style="color:red;">在判断文件是否存在前应该先判断自己对文件及其路径是否有访问权限</span>。
+其次`syscall.Access`只会使用运行程序的用户的uid和gid，这会导致setuid之类的权限失效，通常来说这是没什么问题的，然而posix平台上一般都会考虑euid和egid，因此你可能需要使用`syscall.Faccessat`做代替。你需要在深思熟虑后使用合适的系统调用。
+
+## 性能测试
+
+最后我们看看两个方案的性能，我们以`os.Open`做为基准，分别测试先文件存在和不存在时的性能表现：
+
+```golang
+func checkWithOpen(path string) bool {
+	f, err := os.Open(path)
+	if err != nil {
+		return false
+	}
+	f.Close()
+	return true
+}
+
+func checkWithLstat(path string) bool {
+	_, err := os.Lstat(path)
+	return !os.IsNotExist(err)
+}
+
+func checkWithAccess(path string) bool {
+  err := syscall.Access(path, syscall.F_OK)
+	return !os.IsNotExist(err)
+}
+
+func BenchmarkNotExists(b *testing.B) {
+	for range b.N {
+		checkWithOpen("/home/apocelipes/no-")
+	}
+}
+
+func BenchmarkNotExistsLstat(b *testing.B) {
+	for range b.N {
+		checkWithLstat("/home/apocelipes/no-")
+	}
+}
+
+func BenchmarkNotExistsAccess(b *testing.B) {
+	for range b.N {
+		checkWithAccess("/home/apocelipes/no-")
+	}
+}
+
+func BenchmarkExists(b *testing.B) {
+	for range b.N {
+		checkWithOpen("/home/apocelipes/.zshrc")
+	}
+}
+
+func BenchmarkExistsLstat(b *testing.B) {
+	for range b.N {
+		checkWithLstat("/home/apocelipes/.zshrc")
+	}
+}
+
+func BenchmarkExistsAccess(b *testing.B) {
+	for range b.N {
+		checkWithAccess("/home/apocelipes/.zshrc")
+	}
+}
+```
+
+这是结果：
+
+```text
+goos: linux
+goarch: amd64
+pkg: fileexiststest
+cpu: Intel(R) Core(TM) i5-10200H CPU @ 2.40GHz
+BenchmarkNotExists-4             1305411               939.3 ns/op            72 B/op          2 allocs/op
+BenchmarkNotExistsLstat-4        1461896               833.8 ns/op           280 B/op          3 allocs/op
+BenchmarkNotExistsAccess-4       1962312               614.7 ns/op            24 B/op          1 allocs/op
+BenchmarkExists-4                 304419              3324 ns/op             128 B/op          3 allocs/op
+BenchmarkExistsLstat-4           1331382               952.5 ns/op           232 B/op          2 allocs/op
+BenchmarkExistsAccess-4          1793318               663.4 ns/op            24 B/op          1 allocs/op
+PASS
+ok      fileexiststest  11.210s
+```
+
+测试使用的文件系统类型是XFS。
+
+可以看到open是最慢的，lstat比access慢了16%左右。从结果里也可以看到lstat需要额外返回一个`os.FileInfo`结构导致了额外的内存分配，所以整体上速度更慢。
+
+但考虑到跨平台以及兼容性，使用`os.Lstat`是更长见的做法。
