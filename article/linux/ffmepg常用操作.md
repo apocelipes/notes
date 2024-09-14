@@ -14,7 +14,7 @@ done
 ```bash
 for file in *.ts
 do
-    echo "file ${file}.ts" >> list.txt
+    echo "file ${file}" >> list.txt
 done
 ```
 
