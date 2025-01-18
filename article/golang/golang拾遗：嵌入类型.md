@@ -175,7 +175,7 @@ c := &C{
 
 ### 什么是字段提升
 
-假设我们有一个类型Base，它拥有一个Age字段和一个SayHello方法，现在我们把它嵌入进Drived类型中：
+假设我们有一个类型Base，它拥有一个Age字段和一个SayHello方法，现在我们把它嵌入进Derived类型中：
 
 ```golang
 type Base struct {
@@ -186,16 +186,16 @@ func (b *Base) SayHello() {
     fmt.Printf("Hello! I'm %v years old!", b.Age)
 }
 
-type Drived struct {
+type Derived struct {
     Base
 }
 
-a := Drived{Base{30}}
+a := Derived{Base{30}}
 fmt.Println(a.Age)
 a.SayHello()
 ```
 
-注意最后两行，a直接引用了Base里的字段和方法而无需给出Base的类型名，就像Age和SayHello是Drived自己的字段和方法一样，这就叫做“提升”。
+注意最后两行，a直接引用了Base里的字段和方法而无需给出Base的类型名，就像Age和SayHello是Derived自己的字段和方法一样，这就叫做“提升”。
 
 ### 提升是如何影响字段可见性的
 
@@ -227,7 +227,7 @@ func main(){
 }
 ```
 
-在同一个包中的类型可以任意操作其他类型的字段，包括那些出口的和不出口的，所以在golang中私有的package级别的。
+在同一个包中的类型可以任意操作其他类型的字段，包括那些出口的和不出口的，所以在golang中私有是package级别的。
 
 为什么要提这一点呢？因为这一规则会影响我们的嵌入类型。考虑以下下面的代码能不能通过编译，假设我们有一个叫`a`的go module：
 
@@ -253,25 +253,25 @@ import (
 	"a/b"
 )
 
-type Drived struct {
+type Derived struct {
 	*b.Base
 }
 
 func main() {
-    obj := Drived{&b.Base{}}
+    obj := Derived{&b.Base{}}
     obj.f()
 }
 ```
 
-答案是不能，会收到这样的错误：`obj.f undefined (type Drived has no field or method f)`。
+答案是不能，会收到这样的错误：`obj.f undefined (type Derived has no field or method f)`。
 
 同样，如果我们想以`obj.b`的方式进行字段访问也会报出一样的错误。
 
 那如果我们通过嵌入类型字段的字段名进行引用呢？比如改成`obj.Base.f()`。那么我们会收获下面的报错：`obj.Base.f undefined (cannot refer to unexported field or method b.(*Base).f)`。
 
-因为Base在package b中，而我们的Drived在package main中，所以我们的Drived只能获得在package main中可以访问到的字段和方法，也就是那些从package b中出口的字段和方法。因此这里的Base的f在package b以外是访问不到的。
+因为Base在`package b`中，而我们的Derived在`package main`中，所以我们的Derived只能获得在`package main`中可以访问到的字段和方法，也就是那些从`package b`中出口的字段和方法。因此这里的Base的`f`在`package b`以外是访问不到的。
 
-当我们把Base移动到package main之后，就不会出现上面的问题了，因为前面说过，同一个包里的东西是彼此互相公开的。
+当我们把Base移动到`package main`之后，就不会出现上面的问题了，因为前面说过，同一个包里的东西是彼此互相公开的。
 
 最后关于可见性还有一个有意思的问题：嵌入字段本身受可见性影响吗？
 
@@ -318,8 +318,8 @@ func (p *type) PointerReceiverMethod() {}
 
 而类型的实例也分为两类，普通的类型值和指向类型值的指针。假设我们有一个类型T，那么方法集的规律如下：
 
-- 假设obj的类型是T，则obj的方法集包含接收器是T的所有方法
-- 假设obj是\*T，则obj的方法集包含接收器是T和\*T的所以方法
+- 假设obj的类型是`T`，则obj的方法集包含接收器是`T`的所有方法
+- 假设obj是`*T`，则obj的方法集包含接收器是`T`和`*T`的所以方法
 
 这是来自golang language spec的定义，然而直觉告诉我们还有点小问题，因为我们使用的obj是值的时候通常也可以调用接收器是指针的方法啊？
 
@@ -366,11 +366,11 @@ type Base struct {
 func (b *Base) PointerMethod() {}
 func (b Base) ValueMethod()    {}
 
-type DrivedWithPointer struct {
+type DerivedWithPointer struct {
 	*Base
 }
 
-type DrivedWithValue struct {
+type DerivedWithValue struct {
 	Base
 }
 
@@ -388,22 +388,22 @@ type checkPointerMethod interface {
 }
 
 func main() {
-	var obj1 checkAll = &DrivedWithPointer{&Base{}}
-	var obj2 checkPointerMethod = &DrivedWithPointer{&Base{}}
-	var obj3 checkValueMethod = &DrivedWithPointer{&Base{}}
-	var obj4 checkAll = DrivedWithPointer{&Base{}}
-	var obj5 checkPointerMethod = DrivedWithPointer{&Base{}}
-	var obj6 checkValueMethod = DrivedWithPointer{&Base{}}
+	var obj1 checkAll = &DerivedWithPointer{&Base{}}
+	var obj2 checkPointerMethod = &DerivedWithPointer{&Base{}}
+	var obj3 checkValueMethod = &DerivedWithPointer{&Base{}}
+	var obj4 checkAll = DerivedWithPointer{&Base{}}
+	var obj5 checkPointerMethod = DerivedWithPointer{&Base{}}
+	var obj6 checkValueMethod = DerivedWithPointer{&Base{}}
 	fmt.Println(obj1, obj2, obj3, obj4, obj5, obj6)
 
-	var obj7 checkAll = &DrivedWithValue{}
-	var obj8 checkPointerMethod = &DrivedWithValue{}
-	var obj9 checkValueMethod = &DrivedWithValue{}
+	var obj7 checkAll = &DerivedWithValue{}
+	var obj8 checkPointerMethod = &DerivedWithValue{}
+	var obj9 checkValueMethod = &DerivedWithValue{}
 	fmt.Println(obj7, obj8, obj9)
 
-	var obj10 checkAll = DrivedWithValue{} // error
-	var obj11 checkPointerMethod = DrivedWithValue{} // error
-	var obj12 checkValueMethod = DrivedWithValue{}
+	var obj10 checkAll = DerivedWithValue{} // error
+	var obj11 checkPointerMethod = DerivedWithValue{} // error
+	var obj12 checkValueMethod = DerivedWithValue{}
 	fmt.Println(obj10, obj11, obj12)
 }
 ```
@@ -412,15 +412,15 @@ func main() {
 
 ```text
 # command-line-arguments
-./method.go:50:6: cannot use DrivedWithValue literal (type DrivedWithValue) as type checkAll in assignment:
-        DrivedWithValue does not implement checkAll (PointerMethod method has pointer receiver)
-./method.go:51:6: cannot use DrivedWithValue literal (type DrivedWithValue) as type checkPointerMethod in assignment:
-        DrivedWithValue does not implement checkPointerMethod (PointerMethod method has pointer receiver)
+./method.go:50:6: cannot use DerivedWithValue literal (type DerivedWithValue) as type checkAll in assignment:
+        DerivedWithValue does not implement checkAll (PointerMethod method has pointer receiver)
+./method.go:51:6: cannot use DerivedWithValue literal (type DerivedWithValue) as type checkPointerMethod in assignment:
+        DerivedWithValue does not implement checkPointerMethod (PointerMethod method has pointer receiver)
 ```
 
 总结起来和变量那里的差不多，都是车轱辘话，所以我总结了一张图：
 
-![method sets](../../images/golang/golang-method-sets/receiver.jpg)
+![method sets](../../images/golang/golang-method-sets/method_sets.jpg)
 
 注意红色标出的部分。这是你会在嵌入类型中遇到的第一个坑，所以在选择使用值类型嵌入还是指针类型嵌入的时候需要小心谨慎。
 
@@ -447,43 +447,43 @@ func (b Base) Print() {
 	fmt.Println("Base::Print", b.Name)
 }
 
-type Drived struct {
+type Derived struct {
 	Base
 	Name string
 }
 
-func (d Drived) Print() {
-	fmt.Println("Drived::Print", d.Name)
+func (d Derived) Print() {
+	fmt.Println("Derived::Print", d.Name)
 }
 
 func main() {
-	obj := Drived{Base: Base{"base"}, Name: "drived"}
-	obj.Print() // Drived::Print drived
+	obj := Derived{Base: Base{"base"}, Name: "derived"}
+	obj.Print() // Derived::Print derived
 }
 ```
 
-在这里Drived中同名的`Name`和`Print`屏蔽了Base中的字段和方法。
+在这里Derived中同名的`Name`和`Print`屏蔽了Base中的字段和方法。
 
 如果我们需要访问Base里的字段和方法呢？只需要把Base当成一个普通字段使用即可：
 
 ```golang
-func (d Drived) Print() {
+func (d Derived) Print() {
     d.Base.Print()
-	fmt.Println("Drived::Print", d.Name)
+	fmt.Println("Derived::Print", d.Name)
 }
 
 func main() {
-	obj := Drived{Base: Base{"base"}, Name: "drived"}
+	obj := Derived{Base: Base{"base"}, Name: "derived"}
     obj.Print() 
     // Output:
     // Base::Print base
-    // Drived::Print drived
+    // Derived::Print derived
 }
 ```
 
 同过嵌入类型字段的字段名访问的方法，其接收器是对于的嵌入类型，而不是当前类型，这也是为什么可以访问到`Base.Name`的原因。
 
-如果我们的`Drived.Print`的签名和Base的不同，屏蔽也会发生。
+如果我们的`Derived.Print`的签名和Base的不同，屏蔽也会发生。
 
 还有另外一种情况，当我们有多个嵌入类型，且他们均有相同名字的成员时，会发生什么？
 
@@ -506,44 +506,44 @@ func (b Base2) Print() {
 	fmt.Println("Base2::Print", b.Name)
 }
 
-type Drived struct {
+type Derived struct {
 	Base1
 	Base2
 	Name string
 }
 
-func (d Drived) Print() {
+func (d Derived) Print() {
 	d.Base1.Print()
-	fmt.Println("Drived::Print", d.Name)
+	fmt.Println("Derived::Print", d.Name)
 }
 
 func main() {
-	obj := Drived{Base1: Base1{"base1"}, Base2: Base2{"base2"}, Name: "drived"}
+	obj := Derived{Base1: Base1{"base1"}, Base2: Base2{"base2"}, Name: "derived"}
 	obj.Print()
 }
 ```
 
-这样仍然能正常编译运行，所以我们再加点料，把Drived的Print注释掉，接着就会得到下面的错误：
+这样仍然能正常编译运行，所以我们再加点料，把Derived的Print注释掉，接着就会得到下面的错误：
 
 ```text
 # command-line-arguments
 ./method.go:36:5: ambiguous selector obj.Print
 ```
 
-如果我们再把Drived的Name也注释掉，那么报错会变成下面这样：
+如果我们再把Derived的Name也注释掉，那么报错会变成下面这样：
 
 ```text
 # command-line-arguments
 ./method.go:37:17: ambiguous selector obj.Name
 ```
 
-在没有发生屏蔽的情况下，Base1和Base2的Print和Name都提升到了Drived的字段和方法集里，所以在调用时发生了二义性错误。
+在没有发生屏蔽的情况下，Base1和Base2的Print和Name都提升到了Derived的字段和方法集里，所以在调用时发生了二义性错误。
 
 要解决问题，加上嵌入类型字段的字段名即可：
 
 ```golang
 func main() {
-	obj := Drived{Base1: Base1{"base1"}, Base2: Base2{"base2"}}
+	obj := Derived{Base1: Base1{"base1"}, Base2: Base2{"base2"}}
 	obj.Base1.Print()
     fmt.Println(obj.Base2.Name)
     // Output:
