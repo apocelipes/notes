@@ -55,3 +55,10 @@ ffmpeg -i out.mp4 out%10d.png
 # -vframes 截多少帧
 # -s 图片宽x高
 ```
+
+压缩视频：
+
+```bash
+# 使用hevc压缩视频，使用mp3压缩音频，采样率92k
+ffmpeg -hwaccel cuda -i input.mp4 -c:a libmp3lame -ab 92k -c:v hevc_nvenc -cq 36 -preset slow -b:v 1600k -bufsize 1700k out.mp4
+```
