@@ -82,7 +82,7 @@ $ go build -gcflags=-m=2 2>&1|grep -E '(Range|Builtin)ClearMap'
 ./main.go:35:6: can inline BuiltinClearMap with cost 16 as: func() { clear(bigMap); clear(bigPtrMap); clear(smallMap); clear(smallPtrMap); clear(bigMapIntKey); clear(bigPtrMapIntKey); clear(smallMapIntKey); clear(smallPtrMapIntKey) }
 ```
 
-其中`cost`就是衡量一个函数里的操作有多“重”的数值标准，超过一定的cost，函数就无法内联。可以看到，使用循环会比使用`clear`内置函数重整整四倍。虽然最后因为两个函数都很简单所以被内联展开，但碰上更复制一点的函数，显然使用clear能有更多的冗余。
+其中`cost`就是衡量一个函数里的操作有多“重”的数值标准，超过一定的cost，函数就无法内联。可以看到，使用循环会比使用`clear`内置函数重整整四倍。虽然最后因为两个函数都很简单所以被内联展开，但碰上更复杂一点的函数，显然使用clear能有更多的冗余。
 
 尽管编译器最终会把两者优化成一样的对runtime的map清理函数的调用，但对for循环的优化在内联处理之后，因此for不仅让代码更长，也更容易错失内联优化的机会，而失去内联优化进而会影响逃逸分析从而损失更多性能，你可以在我[以前的博客](./为什么不应该过度关注逃逸分析.md)里看到内联和逃逸分析对内联的影响。
 
