@@ -95,15 +95,15 @@ constexpr unsigned char* data1[] = {
 #embed "data1.bin" limit(32) // 从data1.bin读一定长度的数据进来
 }
 
-constexpr unsigned char* data2[] = {
+constexpr unsigned char data2[] = {
 #embed FILE_NAME limit(32) // 和上面data1等价，但文件名用了宏
 }
 
-constexpr unsigned char* data3[] = {
+constexpr unsigned char data3[] = {
 #embed FILE_NAME PARAM1(32) // 等价，parameter用了宏，但参数没有
 }
 
-constexpr unsigned char* data4[] = {
+constexpr unsigned char data4[] = {
 #embed FILE_NAME PARAM2 // 等价，parameter和参数都依赖宏替换
 }
 ```
@@ -426,7 +426,7 @@ int main()
 
 embed指令需要独占一行，所以要注意代码的格式。作为函数或者模板参数时，生成的整数序列元素数量必须等于要求的参数数量。这种做法已经有点偏向于杂耍了。
 
-其他方式就不列举了，最常见的就是上面这两种。鉴于embed指令的灵活性，想必将来一定会出现很多体操式玩法吧。
+其他方式就不列举了，最常见的就是上面这几种。鉴于embed指令的灵活性，想必将来一定会出现很多体操式玩法吧。
 
 ## 生成文件大小测试
 
