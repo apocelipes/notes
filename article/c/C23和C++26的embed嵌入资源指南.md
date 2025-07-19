@@ -91,7 +91,7 @@ embed指令是预处理器的一种，语法如下：
 #define PARAM1 limit
 #define PARAM2 limit(LEN)
 
-constexpr unsigned char* data1[] = {
+constexpr unsigned char data1[] = {
 #embed "data1.bin" limit(32) // 从data1.bin读一定长度的数据进来
 }
 
