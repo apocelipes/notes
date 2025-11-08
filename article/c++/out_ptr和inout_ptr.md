@@ -143,8 +143,8 @@ test.cpp:19:48: note: in instantiation of function template specialization 'std:
 int main()
 {
     std::shared_ptr<Data> resource;
--   if (err = get_data("apocelipes", std::out_ptr(resource)); err != 0)
-+   if (err = get_data("apocelipes", std::out_ptr(resource, std::default_delete<Data>{})); err != 0)
+-   if (auto err = get_data("apocelipes", std::out_ptr(resource)); err != 0)
++   if (auto err = get_data("apocelipes", std::out_ptr(resource, std::default_delete<Data>{})); err != 0)
         std::cerr << "error\n";
     else
         std::cout << "success, name: " << resource->name << "\n";
