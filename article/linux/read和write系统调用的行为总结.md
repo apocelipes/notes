@@ -70,6 +70,89 @@ read的行为：
 
 这意味着一但read开始，就会忽略所有信号，read也就不可能存在读取一部分数据后被中断的场景。这么做当然是为了数据一致性和安全考虑，虽然代价是和标准有了小小的冲突，但也无可厚非。
 
+想要测试也很简单，准备一个1GB的文件，然后一个线程每次读写1MB，并且让另一个线程不停发信号，理论上下面这段代码不应该看到有“Short Read”的输出：
+
+```c++
+#include <iostream>
+#include <thread>
+#include <atomic>
+#include <signal.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <cstring>
+#include <chrono>
+
+std::atomic<int> sigint_count{0};
+
+void handle_sigint(int signo) {
+    if (signo == SIGINT) {
+        sigint_count++;
+    }
+}
+
+int main() {
+    struct sigaction sa;
+    memset(&sa, 0, sizeof(sa));
+    sa.sa_handler = handle_sigint;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0; // 不设置SA_RESTART，这会禁止系统调用自动重启
+
+    if (sigaction(SIGINT, &sa, nullptr) == -1) {
+        perror("sigaction");
+        return 1;
+    }
+
+    int fd = open("test.data", O_RDONLY); // 1GB
+    if (fd < 0) {
+        perror("open");
+        return 1;
+    }
+    pid_t pid = getpid();
+
+    // 每个100ns就发一次信号
+    std::thread([pid]() {
+        while (true) {
+            kill(pid, SIGINT);
+            std::this_thread::sleep_for(std::chrono::nanoseconds(100));
+        }
+    }).detach();
+
+    const size_t buffer_size = 1024 * 1024; // 1MB
+    char* buffer = new char[buffer_size];
+
+    ssize_t bytes_read;
+    while (sigint_count.load()<=1);
+    while ((bytes_read = read(fd, buffer, buffer_size)) > 0) {
+        if (bytes_read != 1024*1024) {
+                std::cout << "Short Read: " << bytes_read << " bytes\n";
+        }
+    }
+
+    if (bytes_read < 0) {
+        perror("read");
+    }
+
+    close(fd);
+    delete[] buffer;
+
+    std::cout << "SIGINT received: " << sigint_count.load() << " times\n";
+
+    return 0;
+}
+```
+
+输出：
+
+```console
+$ g++-15 -Wall -Wextra -std=c++20 read.cpp
+$ head -c 1073741824 /dev/random > test.data
+$ ./a.out
+
+SIGINT received: 1099 times
+```
+
+可以看到我们发送了1000多次信号，没有对`read`产生任何影响。
+
 说完了read说说write。
 
 write在普通文件上的行为：
