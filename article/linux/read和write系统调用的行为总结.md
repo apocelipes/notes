@@ -109,7 +109,7 @@ int main() {
     }
     pid_t pid = getpid();
 
-    // 每个100ns就发一次信号
+    // 每隔100ns就发一次信号
     std::thread([pid]() {
         while (true) {
             kill(pid, SIGINT);
