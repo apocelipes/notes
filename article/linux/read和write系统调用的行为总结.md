@@ -79,6 +79,7 @@ read的行为：
 #include <signal.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <pthread.h>
 #include <cstring>
 #include <chrono>
 
@@ -107,12 +108,13 @@ int main() {
         perror("open");
         return 1;
     }
-    pid_t pid = getpid();
+    auto main_thread = pthread_self();
 
     // 每隔100ns就发一次信号
-    std::thread([pid]() {
+    std::thread([main_thread]() {
         while (true) {
-            kill(pid, SIGINT);
+            // 给主线程发送信号，使用kill (2) 会给进程内没有屏蔽此信号的任意一个线程发送
+            pthread_kill(main_thread, SIGINT);
             std::this_thread::sleep_for(std::chrono::nanoseconds(100));
         }
     }).detach();
@@ -148,10 +150,10 @@ $ g++-15 -Wall -Wextra -std=c++20 read.cpp
 $ head -c 1073741824 /dev/random > test.data
 $ ./a.out
 
-SIGINT received: 1099 times
+SIGINT received: 1131 times
 ```
 
-可以看到我们发送了1000多次信号，没有对`read`产生任何影响。
+可以看到我们发送了1100多次信号，没有对`read`产生任何影响。
 
 说完了read说说write。
 
