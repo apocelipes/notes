@@ -246,6 +246,31 @@ idx: 2, arg: ./myscript
 
 shebang总体上比binfmt_misc简单很多，也是日常工作中使用最多的。
 
+一个把Shebang利用到极致的例子是字节跳动编写的ffmpeg rust绑定库里的脚本：
+
+```rust
+#!/bin/sh
+#![allow(unused_attributes)] /*
+OUT=/tmp/tmp && rustc "$0" -0 ${0UT} && exec ${OUT} $@ || exit $? #*/
+
+use std::process::Command;
+use std::io::Result;
+use std::path::PathBuf;
+use std::fs;
+
+fn mkdir(dir_name: &str) →> Result<()> {
+    fs::create_dir(dir_name)
+}
+
+fn main () {
+    // 省略
+}
+```
+
+这是合法的rust代码，rust编译器会忽略Shebang，其余的代码都是合法的rust代码或者注释。同时这也是合法的shell脚本，因为shell是解释执行的，在执行到第三行后程序要么exit退出执行要么exec切换到编译好的程序上了，尽管后面的rust内容都不是合法的shell代码，但只要不执行到它们脚本就不会报错。这是一个非常巧妙的利用Shebang把rust当脚本使用的例子。
+
+当然，通过`binfmt_misc`这个例子可以进一步被简化，但Shebang的可移植性更强。
+
 ## binfmt_misc的应用
 
 `binfmt_misc`的用处很多，比如前文提到的wine等模拟器会注册类似`:DOSWin:M::MZ::/usr/bin/wine:`的规则，让操作系统可以执行exe程序。Ubuntu也会注册`Python3.x`之类的规则，让python解释器去运行`.pyc`文件。
@@ -299,6 +324,8 @@ script end
 运行良好
 
 我知道，大多数时候使用`go run`会更简单，这个例子只是用来说明编译型语言的代码文件也可以通过`binfmt_misc`机制像脚本一样方便地使用。
+
+相比上一节提到的rust+Shebang的例子，这个利用`binfmt_misc`的例子可以让开发者专注于go代码本身，不需要在同一份源代码文件中兼顾两种不同的语言，缺点是需要额外的配置且可移植性不如Shebang。
 
 ## 总结
 
