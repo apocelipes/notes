@@ -1,4 +1,4 @@
-ntsync是Linux内核在6.14引入的新功能，它可以在Linux模拟Windows上的可等待对象操作。
+ntsync是Linux内核在6.14引入的新功能，它可以在Linux模拟Windows的可等待对象操作。
 
 这个功能主要由wine团队开发和维护，借此可以在Linux上提供性能更高的Windows接口模拟。
 
@@ -18,13 +18,13 @@ zgrep CONFIG_NTSYNC /proc/config.gz || grep CONFIG_NTSYNC /boot/config-$(uname -
 
 如果看到`CONFIG_NTSYNC=m`说明内核支持，`CONFIG_NTSYNC=y`说明不仅支持而且默认启用了ntsync。
 
-下一步是看ntsync是否启用，`ls -l /dev/ntsync`应该看到一个权限是`rw-rw-rw`的字符设备，如果没看到则需要运行下面的命令：
+下一步是看ntsync是否启用，`ls -l /dev/ntsync`应该看到一个权限是`crw-rw-rw-`的字符设备，如果没看到则需要运行下面的命令：
 
 ```console
 sudo modprobe ntsync
 ```
 
-执行后没有报错的话，相应的设备就已经创建好并挂在/dev目录下了。
+执行后没有报错的话，相应的设备就已经创建好并挂载到/dev目录下了。
 
 ## ntsync的使用流程
 
@@ -135,7 +135,7 @@ wait操作会稍微复杂一些，因为wait是三种对象共用的，wait需�
 
 ```c
 struct ntsync_wait_args {
-    __u64 timeout; // 超时，U64_MAX表示无限阻塞，单位是ns，如果有设置NTSYNC_WAIT_REALTIME，则使用挂钟时间判断是否超时
+    __u64 timeout; // 超时，U64_MAX表示无限阻塞，单位是ns，如果有设置NTSYNC_WAIT_REALTIME，则使用挂钟时间判断是否超时，否则使用开机到现在的纳秒数，注意这个参数填的应该是超时时间点的时间戳，而不是时间长度
     __u64 objs;    // 指向ntsync创建的对象数组的指针，对象都必须是有效的
     __u32 count;   // objs里有多少个对象
     __u32 owner;   // mutex的所有者，objs里有mutex的时候必须传，其他情况下可以忽略
@@ -291,7 +291,7 @@ event对象还支持reset操作，可以把已触发且需要手动重置的even
 ioctl(ntsync_event, NTSYNC_IOC_EVENT_RESET, &prev);
 ```
 
-event对象的另一个作用是用来中止wait操作，只需要将event对象的标识符传给wait_args的alert参数，可以实现操作取消之类的功能，这里就不做演示了。
+event对象的另一个作用是用来中止wait操作，后面会详细介绍。
 
 ## semaphore对象的使用
 
@@ -323,8 +323,6 @@ int ntsync_sem = ioctl(
 // delta传0不会报错，但也不会有任何效果，不可以传NULL
 ioctl(ntsync_sem, NTSYNC_IOC_SEM_RELEASE, &delta)
 ```
-
-老文档会写`NTSYNC_IOC_SEM_POST`，但这个已经废弃了，所有代码都应该使用`NTSYNC_IOC_SEM_RELEASE`。
 
 如果P操作时count是0，则RELEASE执行成功后delta个在等待该信号量的线程会被唤醒。
 
@@ -381,7 +379,7 @@ int main()
     }
 
     // 创建信号量，最多只允许两个线程触发
-    struct ntsync_sem_args e_args = {
+    struct ntsync_sem_args s_args = {
         .count = 2,
         .max = 2,
     };
@@ -389,7 +387,7 @@ int main()
     int ntsync_sem = ioctl(
         ntsync_fd,
         NTSYNC_IOC_CREATE_SEM,
-        &e_args
+        &s_args
     );
     if (ntsync_sem < 0) {
         perror("open sem");
@@ -614,11 +612,218 @@ int main()
 
 可以看到主线程要拿到所有mutex才会继续执行。
 
-一次可以等待的最大对象数被定义在宏`NTSYNC_MAX_WAIT_COUNT`里，objs的元素数量超过这个值也会导致报错。
+一次可以等待的最大对象数由宏`NTSYNC_MAX_WAIT_COUNT`定义，objs的元素数量超过这个值也会导致报错。
 
 mutex没有批量解锁的功能。
 
 值得注意的是，ALL操作需要所有对象全部处于触发状态才会返回，打个比方如果在等待B和C的锁时，A又重新被锁定且不释放，那么ALL操作会一直阻塞下去，直到A、B、C都处于被触发状态。
+
+## 超时和取消
+
+前面的例子里我们都没有使用超时，只要将`timeout`参数设置为`UINT64_MAX`以外的正整数就可以实现超时返回。
+
+注意`timeout`参数传递的是超时发生的时间点的时间戳，比如要实现超时等待5秒，就需要用现在的时间戳加上5秒传递给timeout：
+
+```c
+// 获取当前绝对纳秒时间戳
+static uint64_t get_abstime_ns(clockid_t clock_id, uint64_t relative_ns) {
+    struct timespec ts;
+    clock_gettime(clock_id, &ts);
+    uint64_t now_ns = (uint64_t)ts.tv_sec * 1000000000ULL + ts.tv_nsec;
+    return now_ns + relative_ns;
+}
+
+struct ntsync_event_args e_args_A = {
+    .signaled = 0,
+    .manual = 0,
+};
+int ntsync_event_A = ioctl(
+    ntsync_fd,
+    NTSYNC_IOC_CREATE_EVENT,
+    &e_args_A
+);
+if (ntsync_event_A < 0) {
+    perror("open event_A");
+    exit(1);
+}
+
+uint32_t objs[] = { (uint32_t)ntsync_event_A };
+struct ntsync_wait_args wait_args = {
+    .objs = (uint64_t)(uintptr_t)objs,
+    .count = 1,
+    .owner = 0,
+    .index = 0,
+    .flags = NTSYNC_WAIT_REALTIME,
+    .timeout = get_abstime_ns(CLOCK_REALTIME, 5000000000ULL), // 5秒
+};
+
+// 等待触发，因为event永远不会被触发，所以等待5秒后超时
+int ret = ioctl(ntsync_fd, NTSYNC_IOC_WAIT_ANY, &wait_args);
+if (ret != 0) {
+    perror("NTSYNC_IOC_WAIT_ANY failed");
+    exit(1);
+}
+```
+
+编译运行，等待5秒后会输出：`NTSYNC_IOC_WAIT_ANY failed: Connection timed out`。这是因为超时后errno会被设置为`ETIMEDOUT`，这个错误码以前只有网络相关的系统调用在设置，因此错误信息变成了连接超时。
+
+使用`NTSYNC_WAIT_REALTIME`判断超时的缺点是会受系统时间影响，例如系统时钟漂移或者润秒都会导致出问题。如果要严格控制超时的时间，应该选用其他时钟类型：
+
+```c
+struct ntsync_wait_args wait_args = {
+    .objs = (uint64_t)(uintptr_t)objs,
+    .count = 1,
+    .owner = 0,
+    .index = 0,
+    .flags = 0, // 注意是0
+    .timeout = get_abstime_ns(CLOCK_MONOTONIC, 5000000000ULL), // 5秒
+};
+```
+
+`CLOCK_MONOTONIC`表示从系统启动后到现在的时间，这个时间不会受系统时钟的影响。
+
+讲完超时，我们再来看看如何取消wait操作。
+
+在触发超时之前，wait操作可以被取消。被取消时wait操作会正常返回不会报错，区分是否是取消导致的返回需要判断wait_args里的`index == count`。我们看个例子：
+
+```c
+typedef struct {
+    int obj_fd;
+    int sleep_time;
+} ThreadArgs;
+
+void* thread_func(void *arg) {
+    ThreadArgs *t_args = (ThreadArgs*)arg;
+
+    sleep(t_args->sleep_time);
+
+    uint32_t prev_state = 0;
+    if (ioctl(t_args->obj_fd, NTSYNC_IOC_EVENT_SET, &prev_state) < 0) {
+        perror("NTSYNC_IOC_EVENT_SET failed");
+    }
+
+    return NULL;
+}
+
+int main()
+{
+    int ntsync_fd = open("/dev/ntsync", O_RDWR|O_CLOEXEC);
+    if (ntsync_fd < 0) {
+        perror("open ntsync");
+        exit(1);
+    }
+    struct ntsync_event_args e_args = {
+        .signaled = 0,
+        .manual = 0,
+    };
+    int ntsync_event_A = ioctl(
+        ntsync_fd,
+        NTSYNC_IOC_CREATE_EVENT,
+        &e_args
+    );
+    if (ntsync_event_A < 0) {
+        perror("open event_A");
+        exit(1);
+    }
+    struct ntsync_event_args e_args_B = {
+        .signaled = 0,
+        .manual = 0,
+    };
+    int ntsync_event_B = ioctl(
+        ntsync_fd,
+        NTSYNC_IOC_CREATE_EVENT,
+        &e_args
+    );
+    if (ntsync_event_B < 0) {
+        perror("open event_B");
+        exit(1);
+    }
+    int ntsync_event_C = ioctl(
+        ntsync_fd,
+        NTSYNC_IOC_CREATE_EVENT,
+        &e_args
+    );
+    if (ntsync_event_C < 0) {
+        perror("open event_C");
+        exit(1);
+    }
+    int ntsync_event_cancel = ioctl(
+        ntsync_fd,
+        NTSYNC_IOC_CREATE_EVENT,
+        &e_args
+    );
+    if (ntsync_event_cancel < 0) {
+        perror("open event_cancel");
+        exit(1);
+    }
+
+    pthread_t threads[1];
+    ThreadArgs t_args[1] = {
+        { .obj_fd = ntsync_event_cancel, .sleep_time = 10 },
+    };
+
+    pthread_create(&threads[0], NULL, thread_func, &t_args[0]);
+
+    uint32_t objs[] = { (uint32_t)ntsync_event_A, (uint32_t)ntsync_event_B, (uint32_t)ntsync_event_C };
+    struct ntsync_wait_args wait_args = {
+        .objs = (uint64_t)(uintptr_t)objs,
+        .count = 3,
+        .owner = 0,
+        .index = 0,
+        .flags = 0,
+        .timeout = UINT64_MAX,
+        .alert = ntsync_event_cancel, // 子线程中触发取消，只能传递event对象的描述符
+    };
+
+    int ret = ioctl(ntsync_fd, NTSYNC_IOC_WAIT_ANY, &wait_args);
+    if (ret != 0) {
+        perror("NTSYNC_IOC_WAIT_ANY failed");
+        exit(1);
+    }
+
+    
+    pthread_join(threads[0], NULL);
+
+    printf("index = %d, count = %d\n", wait_args.index, wait_args.count);
+
+    close(ntsync_fd);
+}
+```
+
+通过触发传给alert参数的event对象，wait被取消了，index的值也被设置为count：
+
+```console
+index = 3, count = 3
+```
+
+`NTSYNC_IOC_WAIT_ALL`的取消操作是一样的。
+
+不过对于any，还一个坑——any允许event同时出现在objs和alert里，该条件下即使取消用的event对象被触发，`NTSYNC_IOC_WAIT_ANY`也会正常返回，index被设置为取消event在objs中的索引，换而言之wait_any正常返回而不是被中止：
+
+```diff
+- uint32_t objs[] = { (uint32_t)ntsync_event_A, (uint32_t)ntsync_event_B, (uint32_t)ntsync_event_C };
++ uint32_t objs[] = { (uint32_t)ntsync_event_A, ()ntsync_event_cancel, (uint32_t)ntsync_event_B, (uint32_t)ntsync_event_C };
+ struct ntsync_wait_args wait_args = {
+     .objs = (uint64_t)(uintptr_t)objs,
+-    .count = 3,
++    .count = 4
+     .owner = 0,
+     .index = 0,
+     .flags = 0,
+     .timeout = UINT64_MAX,
+     .alert = ntsync_event_cancel, // 子线程中触发取消
+ };
+```
+
+我们把`ntsync_event_cancel`也加入进objs，下标是1。现在输出会变成：
+
+```console
+index = 1, count = 4
+```
+
+可见wait_any没有被取消而是正常返回了。这一行为是API文档中明确声明的，从语义上来说取消和就绪是同时到来的，取哪种状态都有其道理。
+
+`NTSYNC_IOC_WAIT_ALL`不允许alert指定的event对象出现在objs里，因此没有类似的问题。作为良好的开发实践，any也应该遵守同样的规则——不要将alert中的对象放入objs。
 
 ## 读取对象的状态信息
 
